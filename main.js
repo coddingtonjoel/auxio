@@ -3,7 +3,7 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 const url = require('url')
 const AppMenu = require("./AppMenu");
-
+const session = require("./session.js");
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -88,7 +88,6 @@ function createWindow() {
 app.on('ready', () => {
   createWindow();
   new AppMenu (dev, mainWindow);
-
   // ipcMain listeners go here!
 
   // ex: listener with data param
