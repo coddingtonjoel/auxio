@@ -1,4 +1,5 @@
-const { Menu } = require("electron");
+const { Menu, BrowserWindow } = require("electron");
+const WindowsModule = require("./windows");
 
 const isMac = process.platform === "darwin";
 
@@ -28,7 +29,31 @@ class AppMenu extends Menu {
             click: () => {
                 win.webContents.send("ipcTest");
             }
-        }
+          },
+          {
+            label: "createVolumeWindow()",
+            click: () => {
+                WindowsModule.createVolumeWindow();
+            }
+          },
+          {
+            label: "createQueueWindow()",
+            click: () => {
+                WindowsModule.createQueueWindow();
+            }
+          },
+          {
+            label: "createSearchWindow()",
+            click: () => {
+                WindowsModule.createSearchWindow();
+            }
+          },
+          {
+            label: "createHostPanelWindow()",
+            click: () => {
+                WindowsModule.createHostPanelWindow();
+            }
+          }
         ],
       });
     }
