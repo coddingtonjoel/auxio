@@ -12,7 +12,8 @@ import Queue from "./Queue";
 import Search from "./Search";
 import { ThemeProvider } from 'styled-components';
 import { lightTheme, darkTheme } from "../themes";
-import styled from 'styled-components';
+import GlobalStyle from "../globalStyles";
+import { Helmet } from "react-helmet";
 
 function App() {
   const navigate = useNavigate();
@@ -35,10 +36,10 @@ function App() {
 
    // get previous mode (if any) from local storage
    useEffect(() => {
-       if (
+        if (
            typeof window !== "undefined" &&
            localStorage.getItem("mode") !== null
-       ) {
+        ) {
            const mode = localStorage.getItem("mode");
            if (mode === "Light") {
                setMode(lightTheme);
@@ -46,17 +47,34 @@ function App() {
            if (mode === "Dark") {
                setMode(darkTheme);
            }
-       }
-   }, []);
+        }
 
-  ipcRenderer.on("ipcTest", () => {
-    navigate("/ipcTest");
-  })
+        // change color scheme via app menu
+        ipcRenderer.on("colorScheme", () => {
+            console.log("Yay")
+            if (mode.style === "light") {
+                toggleMode("Dark");
+            }
+            else {
+                toggleMode("Light");
+            }
+        });
+
+        // go to IPC test page via app menu
+        ipcRenderer.on("ipcTest", () => {
+            navigate("/ipcTest");
+        })
+   }, []);
 
   return (
     // wherever mode will be set, pass down the toggleMode function!
       <ThemeProvider theme={mode}>
-        <GlobalStyles>
+          <GlobalStyle/>
+          <Helmet>
+            <link rel="preconnect" href="https://fonts.googleapis.com"/>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Source+Sans+Pro:wght@400;600;700&display=fallback" rel="stylesheet"/>
+          </Helmet>
           <Routes>
             <Route exact path="/" element={<Welcome/>}/>
             <Route exact path="/connect" element={<Connect/>}/>
@@ -67,14 +85,8 @@ function App() {
             <Route exact path="/search" element={<Search/>}/>
             <Route exact path="/ipcTest" element={<IPCTest/>}/>
           </Routes>
-        </GlobalStyles>
       </ThemeProvider>
   )
 }
-
-const GlobalStyles = styled.div`
-  color: ${props => props.theme.text};
-  font-family: "Cairo";
-`;
 
 export default App;

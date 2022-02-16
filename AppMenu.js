@@ -25,6 +25,13 @@ class AppMenu extends Menu {
           { type: "separator" },
           { role: "toggledevtools" },
           {
+            label: "Toggle Light/Dark Mode",
+            click: () => {
+                win.webContents.send("colorScheme");
+            },
+            accelerator: "CmdOrCtrl+P"
+          },
+          {
             label: "Test IPC",
             click: () => {
                 win.webContents.send("ipcTest");

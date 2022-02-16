@@ -35,6 +35,7 @@ function createMainWindow() {
     width: 900,
     height: 650,
     show: false,
+    resizable: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false

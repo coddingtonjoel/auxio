@@ -28,6 +28,7 @@ function createVolumeWindow() {
     height: 100,
     frame: false,
     show: false,
+    resizable: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -63,6 +64,7 @@ function createQueueWindow() {
     height: 900,
     frame: false,
     show: false,
+    resizable: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -98,6 +100,7 @@ function createSearchWindow() {
     height: 900,
     frame: false,
     show: false,
+    resizable: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -133,6 +136,7 @@ function createHostPanelWindow() {
       height: 900,
       frame: true, // TBD
       show: false,
+      resizable: false,
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false
