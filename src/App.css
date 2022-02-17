@@ -2,29 +2,33 @@
 
 /* Override MUI tooltip background color (used in Welcome.js) */
 .MuiTooltip-popper div {
-    background-color: #e4e4e4 !important;
-    color: #000;
+  background-color: #e4e4e4 !important;
+  color: #000;
+}
+
+/* hide scrollbar overflow that results from using react-transition-group
+   explicitly declare a non-hidden value for overflows where necessary */
+body {
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 /* react-transition-group classes */
 .fade-enter {
-    opacity: 0;
-    transform: translate(0, 15px);
-    z-index: 1;
+  opacity: 0;
+  z-index: 1;
   }
-  .fade-enter.fade-enter-active {
-    opacity: 1;
-    transform: translate(0, 0);
-  
-    transition: opacity 250ms ease-out, transform 300ms ease;
-  }
-  .fade-exit {
-    opacity: 1;
-    transform: translate(0, 0);
-  }
-  .fade-exit.fade-exit-active {
-    opacity: 0;
-    transform: translate(0, 20px);
-  
-    transition: opacity 250ms ease-out, transform 300ms ease;
-  }
+
+.fade-enter.fade-enter-active {
+  opacity: 1;
+  transition: opacity 250ms ease-out, 300ms ease;
+}
+
+.fade-exit {
+  opacity: 0;
+}
+
+.fade-exit.fade-exit-active {
+  opacity: 0;
+  transition: opacity 250ms ease-out, 300ms ease;
+}
