@@ -5,6 +5,7 @@ builds/
 # Development folders and files #
 #################################
 .tmp/
+release/
 dist/
 node_modules/
 *.compiled.*
