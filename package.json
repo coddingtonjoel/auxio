@@ -34,9 +34,11 @@
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
     "@mui/material": "^5.4.1",
+    "express": "^4.17.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router-dom": "^6.2.1",
+    "spotify-web-api-node": "^5.0.2",
     "styled-components": "^5.3.3"
   },
   "devDependencies": {
