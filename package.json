@@ -39,9 +39,9 @@
     "electron-installer-dmg": "^3.0.0",
     "electron-winstaller": "^5.0.0",
     "react": "^17.0.2",
+    "react-auth-code-input": "^3.0.0",
     "react-dom": "^17.0.2",
     "react-helmet": "^6.1.0",
-    "react-individual-character-input-boxes": "^1.1.0",
     "react-router-dom": "^6.2.1",
     "react-transition-group": "^4.4.2",
     "styled-components": "^5.3.3"
