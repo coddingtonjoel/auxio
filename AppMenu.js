@@ -16,6 +16,19 @@ class AppMenu extends Menu {
       });
     }
 
+    template.push({
+      label: "Preferences",
+      submenu: [
+        {
+          label: "Toggle Light/Dark Mode",
+          click: () => {
+              win.webContents.send("colorScheme");
+          },
+          accelerator: "CmdOrCtrl+P"
+        }
+      ]
+    });
+
     if (isDev) {
       template.push({
         label: "Developer",
@@ -24,13 +37,6 @@ class AppMenu extends Menu {
           { role: "forcereload" },
           { type: "separator" },
           { role: "toggledevtools" },
-          {
-            label: "Toggle Light/Dark Mode",
-            click: () => {
-                win.webContents.send("colorScheme");
-            },
-            accelerator: "CmdOrCtrl+P"
-          },
           {
             label: "Test IPC",
             click: () => {

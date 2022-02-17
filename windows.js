@@ -28,6 +28,7 @@ function createVolumeWindow() {
     height: 100,
     frame: false,
     show: false,
+    icon: `${__dirname}/src/assets/images/logo.png`,
     resizable: false,
     webPreferences: {
       nodeIntegration: true,
@@ -65,6 +66,7 @@ function createQueueWindow() {
     frame: false,
     show: false,
     resizable: false,
+    icon: `${__dirname}/src/assets/images/logo.png`,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -100,6 +102,7 @@ function createSearchWindow() {
     height: 900,
     frame: false,
     show: false,
+    icon: `${__dirname}/src/assets/images/logo.png`,
     resizable: false,
     webPreferences: {
       nodeIntegration: true,
@@ -136,6 +139,7 @@ function createHostPanelWindow() {
       height: 900,
       frame: true, // TBD
       show: false,
+      icon: `${__dirname}/src/assets/images/logo.png`,
       resizable: false,
       webPreferences: {
         nodeIntegration: true,
