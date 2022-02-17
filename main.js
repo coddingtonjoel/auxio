@@ -33,8 +33,10 @@ function createMainWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 900,
-    height: 650,
+    height: 600,
     show: false,
+    resizable: false,
+    icon: `${__dirname}/src/assets/images/logo.png`,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -108,15 +110,23 @@ app.on('ready', () => {
 
   // resize mainWindow to welcome/connect size
   ipcMain.on("windowSize:welcome", () => {
-    mainWindow.setSize(900, 650, true);
+    mainWindow.setSize(900, 600, true);
+  })
+
+  ipcMain.on("login:google", () => {
+    WindowsModule.createGoogleLoginWindow();
+  })
+
+  ipcMain.on("login:spotify", () => {
+    WindowsModule.createSpotifyLoginWindow();
   })
 
   // ipc listeners will be included here for new window calls that get triggered on the frontend auxio player window.
   // this means that there will eventually be four listeners that respectively call:
-      // WindowModule.createVolumeWindow();
-      // WindowModule.createQueueWindow();
-      // WindowModule.createSearchWindow();
-      // WindowModule.createHostPanelWindow();
+      // WindowsModule.createVolumeWindow();
+      // WindowsModule.createQueueWindow();
+      // WindowsModule.createSearchWindow();
+      // WindowsModule.createHostPanelWindow();
 })
 
 // Quit when all windows are closed.

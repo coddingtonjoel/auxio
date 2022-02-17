@@ -16,6 +16,19 @@ class AppMenu extends Menu {
       });
     }
 
+    template.push({
+      label: "Preferences",
+      submenu: [
+        {
+          label: "Toggle Light/Dark Mode",
+          click: () => {
+              win.webContents.send("colorScheme");
+          },
+          accelerator: "CmdOrCtrl+P"
+        }
+      ]
+    });
+
     if (isDev) {
       template.push({
         label: "Developer",
