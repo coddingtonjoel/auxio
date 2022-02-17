@@ -48,23 +48,23 @@ function App() {
                setMode(darkTheme);
            }
         }
-
-        // change color scheme via app menu
-        ipcRenderer.on("colorScheme", () => {
-            console.log("Yay")
-            if (mode.style === "light") {
-                toggleMode("Dark");
-            }
-            else {
-                toggleMode("Light");
-            }
-        });
-
-        // go to IPC test page via app menu
-        ipcRenderer.on("ipcTest", () => {
-            navigate("/ipcTest");
-        })
    }, []);
+
+   // change color scheme via app menu
+   ipcRenderer.once("colorScheme", () => {
+        console.log("Yay")
+        if (mode.style === "light") {
+            toggleMode("Dark");
+        }
+        else {
+            toggleMode("Light");
+        }
+    });     
+
+    // go to IPC test page via app menu
+    ipcRenderer.once("ipcTest", () => {
+        navigate("/ipcTest");
+    })
 
   return (
     // wherever mode will be set, pass down the toggleMode function!
