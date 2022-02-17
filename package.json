@@ -28,12 +28,17 @@
     "start": "cross-env NODE_ENV=development webpack serve --hot --host 0.0.0.0 --config=./webpack.dev.config.js --mode development",
     "build": "cross-env NODE_ENV=production webpack --config webpack.build.config.js --mode production",
     "package": "npm run build",
-    "postpackage": "electron-packager ./ --out=./builds"
+    "postpackage": "electron-packager ./ --out=./release/mac --overwrite --ignore=^/release --ignore=^/release --electron-version 9.4.0 --platform=darwin --arch=x64 --prune=true --icon=src/assets/images/logo.icns && electron-packager ./ --out=./release/win --overwrite --asar --ignore=^/release --electron-version 9.4.0 --platform=win32 --arch=x64 --prune=true --icon=src/assets/images/logo.ico",
+    "windows-installer": "node ./src/scripts/createinstaller.js",
+    "mac-installer": "electron-installer-dmg ./release/mac/Auxio-darwin-x64/Auxio.app Auxio --out=release/installers/mac --background=src/assets/images/installer.png --icon=src/assets/images/logo.png --title=Auxio --overwrite"
+    
   },
   "dependencies": {
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
     "@mui/material": "^5.4.1",
+    "electron-installer-dmg": "^3.0.0",
+    "electron-winstaller": "^5.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-helmet": "^6.1.0",
