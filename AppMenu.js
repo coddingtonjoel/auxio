@@ -1,4 +1,5 @@
-const { Menu } = require("electron");
+const { Menu, BrowserWindow } = require("electron");
+const WindowsModule = require("./windows");
 
 const isMac = process.platform === "darwin";
 
@@ -15,6 +16,19 @@ class AppMenu extends Menu {
       });
     }
 
+    template.push({
+      label: "Preferences",
+      submenu: [
+        {
+          label: "Toggle Light/Dark Mode",
+          click: () => {
+              win.webContents.send("colorScheme");
+          },
+          accelerator: "CmdOrCtrl+P"
+        }
+      ]
+    });
+
     if (isDev) {
       template.push({
         label: "Developer",
@@ -28,7 +42,31 @@ class AppMenu extends Menu {
             click: () => {
                 win.webContents.send("ipcTest");
             }
-        }
+          },
+          {
+            label: "createVolumeWindow()",
+            click: () => {
+                WindowsModule.createVolumeWindow();
+            }
+          },
+          {
+            label: "createQueueWindow()",
+            click: () => {
+                WindowsModule.createQueueWindow();
+            }
+          },
+          {
+            label: "createSearchWindow()",
+            click: () => {
+                WindowsModule.createSearchWindow();
+            }
+          },
+          {
+            label: "createHostPanelWindow()",
+            click: () => {
+                WindowsModule.createHostPanelWindow();
+            }
+          }
         ],
       });
     }

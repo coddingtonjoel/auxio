@@ -4,6 +4,8 @@ const path = require('path')
 const url = require('url')
 const AppMenu = require("./AppMenu");
 const session = require("./session.js");
+const WindowsModule = require("./windows");
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -27,12 +29,14 @@ if (process.platform === 'win32') {
   app.commandLine.appendSwitch('force-device-scale-factor', '1');
 }
 
-function createWindow() {
+function createMainWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    width: 900,
+    height: 600,
     show: false,
+    resizable: false,
+    icon: `${__dirname}/src/assets/images/logo.png`,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -56,7 +60,6 @@ function createWindow() {
       slashes: true
     })
   }
-
   mainWindow.loadURL(indexPath)
 
   // Don't show until we are ready and loaded
@@ -86,7 +89,7 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-  createWindow();
+  createMainWindow();
   new AppMenu (dev, mainWindow);
   // ipcMain listeners go here!
 
@@ -99,6 +102,23 @@ app.on('ready', () => {
   ipcMain.on("test:withoutParam", () => {
     console.log("This is a message sent via a console.log() in main.js.");
   })
+
+  // resize mainWindow to player size
+  ipcMain.on("windowSize:player", () => {
+    mainWindow.setSize(650, 400, true);
+  });
+
+  // resize mainWindow to welcome/connect size
+  ipcMain.on("windowSize:welcome", () => {
+    mainWindow.setSize(900, 600, true);
+  })
+
+  // ipc listeners will be included here for new window calls that get triggered on the frontend auxio player window.
+  // this means that there will eventually be four listeners that respectively call:
+      // WindowModule.createVolumeWindow();
+      // WindowModule.createQueueWindow();
+      // WindowModule.createSearchWindow();
+      // WindowModule.createHostPanelWindow();
 })
 
 // Quit when all windows are closed.

@@ -1,29 +1,109 @@
-import React from 'react';
-import { Route, Routes, useNavigate } from "react-router-dom";
-import styled from 'styled-components';
+import React, { useState, useEffect } from 'react';
+import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import '../App.css'
 import { ipcRenderer } from "electron";
 import IPCTest from "./IPCTest";
+import Welcome from "./Welcome";
+import Connect from "./Connect";
+import Join from "./Join";
+import Player from "./Player";
+import HostPanel from "./HostPanel";
+import Volume from "./Volume";
+import Queue from "./Queue";
+import Search from "./Search";
+import styled, { ThemeProvider } from 'styled-components';
+import { lightTheme, darkTheme } from "../themes";
+import GlobalStyle from "../globalStyles";
+import { Helmet } from "react-helmet";
+import { TransitionGroup, CSSTransition } from "react-transition-group";
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  ipcRenderer.on("ipcTest", () => {
-    navigate("/ipcTest");
-  })
+   // access this in other places using withTheme()
+   const [mode, setMode] = useState(lightTheme);
+
+   // prop func sent down to set new mode in both state and local storage
+   const toggleMode = newMode => {
+       if (newMode === "Light") {
+           setMode(lightTheme);
+       }
+       if (newMode === "Dark") {
+           setMode(darkTheme);
+       }
+       if (typeof window !== "undefined") {
+           localStorage.setItem("mode", newMode);
+       }
+   };
+
+   // get previous mode (if any) from local storage
+   useEffect(() => {
+        if (
+           typeof window !== "undefined" &&
+           localStorage.getItem("mode") !== null
+        ) {
+           const mode = localStorage.getItem("mode");
+           if (mode === "Light") {
+               setMode(lightTheme);
+           }
+           if (mode === "Dark") {
+               setMode(darkTheme);
+           }
+        }
+   }, []);
+
+   // change color scheme via app menu
+   ipcRenderer.once("colorScheme", () => {
+        if (mode.style === "light") {
+            toggleMode("Dark");
+        }
+        else {
+            toggleMode("Light");
+        }
+    });     
+
+    // go to IPC test page via app menu
+    ipcRenderer.once("ipcTest", () => {
+        navigate("/ipcTest");
+    })
 
   return (
-      <Routes>
-        <Route exact path="/" element={
-          <div>
-            <h1>Welcome to Auxio!</h1>
-            <p>I hope you enjoy using basic-electron-react-boilerplate to start your dev off right!</p>
-          </div>
-        }>
-        </Route>
-        <Route exact path="/ipcTest" element={<IPCTest/>}/>
-      </Routes>
+    // wherever mode will be set, pass down the toggleMode function!
+      <ThemeProvider theme={mode}>
+          <GlobalStyle/>
+          <Helmet>
+            <link rel="preconnect" href="https://fonts.googleapis.com"/>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Source+Sans+Pro:wght@400;600;700&display=fallback" rel="stylesheet"/>
+          </Helmet>
+          <TransitionGroup component={null}>
+            <CSSTransition key={location.key} classNames="fade" timeout={300}>
+                    <Routes key={location}>
+                        <Route exact path="/" element={<Welcome/>}/>
+                        <Route exact path="/connect" element={<Connect/>}/>
+                        <Route exact path="/player" element={<Player/>}/>
+                        <Route exact path="/join" element={<Join/>}/>
+                        <Route exact path="/host" element={<HostPanel/>}/>
+                        <Route exact path="/volume" element={<Volume/>}/>
+                        <Route exact path="/queue" element={<Queue/>}/>
+                        <Route exact path="/search" element={<Search/>}/>
+                        <Route exact path="/ipcTest" element={<IPCTest/>}/>
+                    </Routes>
+            </CSSTransition>
+          </TransitionGroup>
+          <BottomBorder/>
+      </ThemeProvider>
   )
 }
 
-export default App
+const BottomBorder = styled.div`
+  background-color: ${props => props.theme.primary};
+  width: 100vw;
+  height: 12px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+`;
+
+export default App;
