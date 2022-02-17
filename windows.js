@@ -169,9 +169,85 @@ function createHostPanelWindow() {
     })
   }
 
+  function createSpotifyLoginWindow() {
+    // Create the browser window.
+    spotify = new BrowserWindow({
+      width: 500,
+      height: 500,
+      frame: true, // TBD
+      show: false,
+      icon: `${__dirname}/src/assets/images/logo.png`,
+      resizable: false,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false
+      }
+    });
+  
+    spotify.loadURL("https://www.spotify.com/us/");
+  
+    // Don't show until we are ready and loaded
+    spotify.once('ready-to-show', () => {
+      spotify.show()
+  
+      // Open the DevTools automatically if developing
+      if (dev) {
+        const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
+  
+        installExtension(REACT_DEVELOPER_TOOLS)
+          .catch(err => console.log('Error loading React DevTools: ', err))
+        // ~mainWindow.webContents.openDevTools()
+      }
+    })
+  
+    // Emitted when the window is closed.
+    spotify.on('closed', function() {
+      hostPanel = null
+    })
+  }
+
+  function createGoogleLoginWindow() {
+    // Create the browser window.
+    google = new BrowserWindow({
+      width: 500,
+      height: 500,
+      frame: true, // TBD
+      show: false,
+      icon: `${__dirname}/src/assets/images/logo.png`,
+      resizable: false,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false
+      }
+    });
+  
+    google.loadURL("https://www.google.com/");
+  
+    // Don't show until we are ready and loaded
+    google.once('ready-to-show', () => {
+      google.show()
+  
+      // Open the DevTools automatically if developing
+      if (dev) {
+        const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
+  
+        installExtension(REACT_DEVELOPER_TOOLS)
+          .catch(err => console.log('Error loading React DevTools: ', err))
+        // ~mainWindow.webContents.openDevTools()
+      }
+    })
+  
+    // Emitted when the window is closed.
+    google.on('closed', function() {
+      hostPanel = null
+    })
+  }
+
 module.exports = {
     createQueueWindow,
     createSearchWindow,
     createVolumeWindow,
-    createHostPanelWindow
+    createHostPanelWindow,
+    createSpotifyLoginWindow,
+    createGoogleLoginWindow
 }
