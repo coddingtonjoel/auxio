@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
-
+const main = require("./main.js")
 // THIS FILE CONTAINS WINDOW INFORMATION FOR HOST PANEL, VOLUME, QUEUE, AND SEARCH CONTROLS.
 
 // Keep a reference for dev mode
@@ -183,9 +183,11 @@ function createHostPanelWindow() {
         contextIsolation: false
       }
     });
-  
-    spotify.loadURL("https://www.spotify.com/us/");
-  
+
+    spotify.loadURL("https://accounts.spotify.com/authorize?client_id=2bab0f940a6547628f9beb01de54e982&response_type=code&redirect_uri=http://localhost:8080&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state");
+    main.authSpotify();
+    spotify.close();
+
     // Don't show until we are ready and loaded
     spotify.once('ready-to-show', () => {
       spotify.show()
@@ -199,7 +201,7 @@ function createHostPanelWindow() {
         // ~mainWindow.webContents.openDevTools()
       }
     })
-  
+   
     // Emitted when the window is closed.
     spotify.on('closed', function() {
       hostPanel = null
