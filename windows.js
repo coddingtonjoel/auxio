@@ -184,7 +184,12 @@ function createHostPanelWindow() {
       }
     });
 
+
     spotify.loadURL("https://accounts.spotify.com/authorize?client_id=2bab0f940a6547628f9beb01de54e982&response_type=code&redirect_uri=http://localhost:8080&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state");
+    var result = window.location.search;
+    //const code = new URLSearchParams(window.location.search).get('code')
+    //^ this should give the code but window isnt defined even tho as you type window it says the correct thing
+    console.log(code);
     main.authSpotify();
     spotify.close();
 
