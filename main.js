@@ -105,7 +105,7 @@ app.on('ready', () => {
 
   // resize mainWindow to player size
   ipcMain.on("windowSize:player", () => {
-    mainWindow.setSize(650, 400, true);
+    mainWindow.setSize(650, 450, true);
   });
 
   // resize mainWindow to welcome/connect size
