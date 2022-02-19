@@ -5,11 +5,20 @@ import openin from "../assets/icons/openin.svg";
 import authInProg from "../assets/icons/auth-inprog.svg";
 import check from "../assets/icons/auth-complete.svg";
 import Tooltip from "@mui/material/Tooltip";
+import { ipcRenderer } from "electron";
 
 const Welcome = () => {
     const navigate = useNavigate();
     let googleAuthenticated = true;
     let spotifyAuthenticated = false;
+
+    const handleGoogleLogin = () => {
+        ipcRenderer.send("login:google");
+    }
+
+    const handleSpotifyLogin = () => {
+        ipcRenderer.send("login:spotify");
+    }
 
     // run some tests in here to check if user is authenticated with spotify and google. If so, navigate them to /connect by default in a useEffect() hook
     return (
@@ -20,14 +29,14 @@ const Welcome = () => {
                     <p>We're excited you're here. Before you can start listening, you'll need to sign in to our related services.</p>
                 </div>
                 <div className="buttons">
-                    <a draggable={false} href="#">
+                    <a draggable={false} href="#" onClick={handleGoogleLogin}>
                         <span>1.</span>
                         <span>Sign into Google <img src={openin} alt="open in"/></span>
                         <Tooltip placement="left" title={googleAuthenticated ? "Logged In" : "Awaiting Login"}>
                             <img draggable={false} className="status" src={googleAuthenticated ? check : authInProg} alt="Incomplete"/>
                         </Tooltip>
                     </a>
-                    <a draggable={false} href="#">
+                    <a draggable={false} href="#" onClick={handleSpotifyLogin}>
                         <span>2.</span>
                         <span>Sign into Spotify <img src={openin} alt="open in"/></span>
                         <Tooltip placement="left" title={spotifyAuthenticated ? "Logged In" : "Awaiting Login"}>

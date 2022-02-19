@@ -7,7 +7,7 @@ import headphonesIcon from "../assets/icons/headphones.svg";
 const Connect = () => {
   return (
     <Wrapper>
-        <h2>Let's get you connected to a server!</h2>
+        <h2>Let's get you connected to a session!</h2>
         <div className="button-container">
           <Link draggable={false} to="/player">
               <img src={shareIcon} alt="Share"/>
