@@ -1,5 +1,9 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
+
+import ReactDOM from 'react-dom';
+import { GoogleLogin } from 'react-google-login';
+
 import styled from 'styled-components';
 
 const Welcome = () => {
@@ -11,7 +15,8 @@ const Welcome = () => {
             <div>
                 <h1>Welcome to Auxio!</h1>
                 <p>We're excited you're here. Before you can start listening, you'll need to sign in to our related services.</p>
-                <Link to="/player">Player</Link>
+                <Link to="/player">Player</Link>        
+
             </div>
         </div>
         

@@ -1,10 +1,15 @@
-const { getAuth, signInWithPopup, GoogleAuthProvider } = require("firebase/auth");
+/*
 
+//check with: https://www.npmjs.com/package/electron-google-oauth
+
+const {app, authentification} = require("./firebase");
+const { signInWithPopup, GoogleAuthProvider } = require("firebase/auth");
 
 const provider = new GoogleAuthProvider();
-const auth = getAuth();
 
-signInWithPopup(auth, provider) //sign in function
+console.log(authentification);
+
+signInWithPopup(authentification, provider) //sign in function
   .then((result) => {
     // This gives you a Google Access Token. You can use it to access the Google API.
     const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -17,6 +22,7 @@ signInWithPopup(auth, provider) //sign in function
     console.log(user.email);
     // ...
   }).catch((error) => {
+    //console.log(auth, provider);
     console.log("Error: sign in failed");
     // Handle Errors here.
     const errorCode = error.code;
@@ -30,7 +36,75 @@ signInWithPopup(auth, provider) //sign in function
     console.log(credential);
     // ...
   });
+ 
 
   module.exports = {
     signInWithPopup
   }
+
+*/
+
+const { getAuth, onAuthStateChanged, signInWithCredential, GoogleAuthProvider } = require("firebase/auth"); //for firebase authentification
+
+const auth = getAuth();
+
+function onGoogleSignIn(googleUser) 
+{
+  console.log("testing");
+  var profile = googleUser.getBasicProfile();
+  console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+  console.log('Name: ' + profile.getName());
+  console.log('Image URL: ' + profile.getImageUrl());
+  console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+}
+
+function isUserEqual(googleUser, firebaseUser) 
+{
+  if (firebaseUser) 
+  {
+    const providerData = firebaseUser.providerData;
+    for (let i = 0; i < providerData.length; i++) {
+      if (providerData[i].providerId === GoogleAuthProvider.PROVIDER_ID &&
+          providerData[i].uid === googleUser.getBasicProfile().getId()) 
+      {
+        // We don't need to reauth the Firebase connection.
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function onFirebaseSignIn(googleUser) 
+{
+  console.log('Google Auth Response', googleUser);
+  // We need to register an Observer on Firebase Auth to make sure auth is initialized.
+  const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    unsubscribe();
+    // Check if we are already signed-in Firebase with the correct user.
+    if (!isUserEqual(googleUser, firebaseUser)) {
+      // Build Firebase credential with the Google ID token.
+      const credential = GoogleAuthProvider.credential(
+          googleUser.getAuthResponse().id_token);
+
+      // Sign in with credential from the Google user.
+      signInWithCredential(auth, credential).catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // The email of the user's account used.
+        const email = error.email;
+        console.log(errorCode, errorMessage);
+        // The credential that was used.
+        const credential = GoogleAuthProvider.credentialFromError(error);
+        // ...
+      });
+    } else {
+      console.log('User already signed-in Firebase.');
+    }
+  });
+}
+
+module.exports = {
+  onGoogleSignIn
+}

@@ -60,7 +60,7 @@ class AppMenu extends Menu {
           {
             label: "Google Login",
             click: () => {
-                googleLogin.signInWithPopup();
+                googleLogin.onGoogleSignIn();
             }
           }
         ],
