@@ -1,6 +1,9 @@
 const { Menu, BrowserWindow } = require("electron");
 const WindowsModule = require("./windows");
 
+const firebaseStartup = require("./api/firebase");
+const googleLogin = require("./api/google");
+
 const isMac = process.platform === "darwin";
 
 class AppMenu extends Menu {
@@ -65,6 +68,12 @@ class AppMenu extends Menu {
             label: "createHostPanelWindow()",
             click: () => {
                 WindowsModule.createHostPanelWindow();
+            }
+          },
+          {
+            label: "Google Login",
+            click: () => {
+                googleLogin.onGoogleSignIn();
             }
           }
         ],

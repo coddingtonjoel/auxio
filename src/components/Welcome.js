@@ -1,5 +1,9 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
+
+import ReactDOM from 'react-dom';
+import { GoogleLogin } from 'react-google-login';
+
 import styled from 'styled-components';
 import openin from "../assets/icons/openin.svg";
 import authInProg from "../assets/icons/auth-inprog.svg";
