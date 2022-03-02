@@ -13,15 +13,19 @@ import { ipcRenderer } from "electron";
 
 const Welcome = () => {
     const navigate = useNavigate();
-    let googleAuthenticated = true;
+    let googleAuthenticated = false;
     let spotifyAuthenticated = false;
-
-    const handleGoogleLogin = () => {
-        ipcRenderer.send("login:google");
-    }
 
     const handleSpotifyLogin = () => {
         ipcRenderer.send("login:spotify");
+    }
+
+    const notifyGoogleSignInSuccess = (response) => {
+        googleAuthenticated = true;
+        ipcRenderer.send("login:googleSuccess", response);
+    }
+    const notifyGoogleSignInFailure = (response) => {
+        ipcRenderer.send("login:googleFailure", response);
     }
 
     // run some tests in here to check if user is authenticated with spotify and google. If so, navigate them to /connect by default in a useEffect() hook
@@ -32,14 +36,27 @@ const Welcome = () => {
                     <h1>Welcome to Auxio!</h1>
                     <p>We're excited you're here. Before you can start listening, you'll need to sign in to our related services.</p>
                 </div>
+
                 <div className="buttons">
-                    <a draggable={false} href="#" onClick={handleGoogleLogin}>
-                        <span>1.</span>
-                        <span>Sign into Google <img src={openin} alt="open in"/></span>
-                        <Tooltip placement="left" title={googleAuthenticated ? "Logged In" : "Awaiting Login"}>
-                            <img draggable={false} className="status" src={googleAuthenticated ? check : authInProg} alt="Incomplete"/>
-                        </Tooltip>
-                    </a>
+
+                    <GoogleLogin draggable={false} href="#"
+                        clientId="902655600558-htn9indbkthqkjdenujde87jfa89gbhr.apps.googleusercontent.com"
+                        render={renderProps => ( //custom styling for google button
+                            <a draggable={false} href="#" onClick={renderProps.onClick}>
+                                <span>1.</span>
+                                <span>Sign into Google <img src={openin} alt="open in"/></span>
+                                <Tooltip placement="left" title={googleAuthenticated ? "Logged In" : "Awaiting Login"}>
+                                    <img draggable={false} className="status" src={googleAuthenticated ? check : authInProg} alt="Incomplete"/>
+                                </Tooltip>
+                            </a>
+                        )}
+                        onSuccess={notifyGoogleSignInSuccess}
+                        onFailure={notifyGoogleSignInFailure}
+                        isSignedIn={true}
+                        
+                        cookiePolicy={'single_host_origin'}
+                    />
+
                     <a draggable={false} href="#" onClick={handleSpotifyLogin}>
                         <span>2.</span>
                         <span>Sign into Spotify <img src={openin} alt="open in"/></span>
@@ -47,6 +64,7 @@ const Welcome = () => {
                             <img draggable={false} className="status" src={spotifyAuthenticated ? check : authInProg} alt="Incomplete"/>
                         </Tooltip>
                     </a>
+                
                 </div>
             </Wrapper>
             {/* Temporary bypass; the progression to /connect will be handled by a navigation call upon completion of google/spotify logins */}
