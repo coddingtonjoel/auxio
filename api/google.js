@@ -1,4 +1,39 @@
+
+//note everything in GoogleCred is static since credentials should be the same throughout the entire application.
+class GoogleCred
+{
+  static credentials = null; //the credentials
+  static credExist = false; //if the credentials exist
+  
+  //request the credentials
+  static getCredentials = () => {
+    return GoogleCred.credentials;
+  }
+  
+  //set the credentials
+  static setCredentials = (creds) => {
+    GoogleCred.credentials = creds;
+    GoogleCred.credExist = true;
+  }
+  
+  //reset the credentials back to null
+  static clearCredentials = (creds) => {
+    GoogleCred.credentials = null;
+    GoogleCred.credExist = false;
+  }
+}
+
+module.exports = {
+  GoogleCred
+}
+
+
+
+
+
+
 /*
+// *** NOTE *** previous work, this may be needed in the future, but likely will be discared
 
 //check with: https://www.npmjs.com/package/electron-google-oauth
 
@@ -41,8 +76,6 @@ signInWithPopup(authentification, provider) //sign in function
   module.exports = {
     signInWithPopup
   }
-
-*/
 
 const { getAuth, onAuthStateChanged, signInWithCredential, GoogleAuthProvider } = require("firebase/auth"); //for firebase authentification
 
@@ -108,3 +141,5 @@ function onFirebaseSignIn(googleUser)
 module.exports = {
   onGoogleSignIn
 }
+
+*/
