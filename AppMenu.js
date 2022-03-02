@@ -1,8 +1,8 @@
 const { Menu, BrowserWindow } = require("electron");
 const WindowsModule = require("./windows");
 
-const firebaseStartup = require("./api/firebase");
-const googleLogin = require("./api/google");
+const {Database} = require("./api/firebase.js");
+const googleLogin = require("./api/google.js");
 
 const isMac = process.platform === "darwin";
 
@@ -67,15 +67,43 @@ class AppMenu extends Menu {
           {
             label: "createHostPanelWindow()",
             click: () => {
-                WindowsModule.createHostPanelWindow();
+              WindowsModule.createHostPanelWindow();
+            }
+          },
+
+          {
+            label: "FirebaseAuth()", //CALL THIS BEFORE REQUESTING/MODIFYING DATA FROM FIREBASE
+            click: () => {
+              Database.initServer();
+              Database.requestCredentials();
             }
           },
           {
-            label: "Google Login",
+            label: "DatabaseTestCreate()",
             click: () => {
-                googleLogin.onGoogleSignIn();
+              Database.createData("userData/user1123581321345589",
+                {
+                  "param1": "stringInput",
+                  "param2": 69720375,
+                  "param3": 3.14
+                }
+              );
+            }
+
+          },
+          {
+            label: "DatabaseTestRead()",
+            click: () => {
+              Database.getData("userData/user1123581321345589", (snapshot) => { console.log(snapshot.val()); });
+            }
+          },
+          {
+            label: "DatabaseTestDelete()",
+            click: () => {
+              Database.createData("userData/user1123581321345589", {});
             }
           }
+
         ],
       });
     }
