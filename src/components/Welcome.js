@@ -1,7 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-
-import ReactDOM from 'react-dom';
 import { GoogleLogin } from 'react-google-login';
 
 import styled from 'styled-components';
@@ -12,20 +10,21 @@ import Tooltip from "@mui/material/Tooltip";
 import { ipcRenderer } from "electron";
 
 const Welcome = () => {
+    const [googleAuth, setGoogleAuth] = useState(false);
+    const [spotifyAuth, setSpotifyAuth] = useState(false);
     const navigate = useNavigate();
-    let googleAuthenticated = false;
-    let spotifyAuthenticated = false;
 
     const handleSpotifyLogin = () => {
         ipcRenderer.send("login:spotify");
     }
 
     const notifyGoogleSignInSuccess = (response) => {
-        googleAuthenticated = true;
+        setGoogleAuth(true)
         ipcRenderer.send("login:googleSuccess", response);
     }
     const notifyGoogleSignInFailure = (response) => {
         ipcRenderer.send("login:googleFailure", response);
+        setGoogleAuth(false);
     }
 
     // run some tests in here to check if user is authenticated with spotify and google. If so, navigate them to /connect by default in a useEffect() hook
@@ -42,11 +41,11 @@ const Welcome = () => {
                     <GoogleLogin draggable={false} href="#"
                         clientId="902655600558-htn9indbkthqkjdenujde87jfa89gbhr.apps.googleusercontent.com"
                         render={renderProps => ( //custom styling for google button
-                            <a draggable={false} href="#" onClick={renderProps.onClick}>
+                            <a draggable={false} href="#" onClick={renderProps.onClick} className={googleAuth ? "disabled" : ""}>
                                 <span>1.</span>
                                 <span>Sign into Google <img src={openin} alt="open in"/></span>
-                                <Tooltip placement="left" title={googleAuthenticated ? "Logged In" : "Awaiting Login"}>
-                                    <img draggable={false} className="status" src={googleAuthenticated ? check : authInProg} alt="Incomplete"/>
+                                <Tooltip placement="left" title={googleAuth ? "Logged In" : "Awaiting Login"}>
+                                    <img draggable={false} className="status" src={googleAuth ? check : authInProg} alt="Incomplete"/>
                                 </Tooltip>
                             </a>
                         )}
@@ -57,11 +56,11 @@ const Welcome = () => {
                         cookiePolicy={'single_host_origin'}
                     />
 
-                    <a draggable={false} href="#" onClick={handleSpotifyLogin}>
+                    <a draggable={false} href="#" onClick={handleSpotifyLogin} className={spotifyAuth ? "disabled" : ""}>
                         <span>2.</span>
                         <span>Sign into Spotify <img src={openin} alt="open in"/></span>
-                        <Tooltip placement="left" title={spotifyAuthenticated ? "Logged In" : "Awaiting Login"}>
-                            <img draggable={false} className="status" src={spotifyAuthenticated ? check : authInProg} alt="Incomplete"/>
+                        <Tooltip placement="left" title={spotifyAuth ? "Logged In" : "Awaiting Login"}>
+                            <img draggable={false} className="status" src={spotifyAuth ? check : authInProg} alt="Incomplete"/>
                         </Tooltip>
                     </a>
                 
@@ -137,6 +136,15 @@ const Wrapper = styled.div`
 
     .buttons {
         margin: auto;
+    }
+
+    .disabled {
+        opacity: 0.75;
+        cursor: default;
+    }
+
+    .disabled:hover {
+        background-color: ${props => props.theme.primary};
     }
 `;
 export default Welcome;
