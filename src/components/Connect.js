@@ -9,6 +9,7 @@ const Connect = () => {
     <Wrapper>
         <h2>Let's get you connected to a session!</h2>
         <div className="button-container">
+          {/* Write a handler for this that starts loading, sends an IPC message to backend to generate code, and waits for an OK to stop loading and navigate to /player */}
           <Link draggable={false} to="/player">
               <img src={shareIcon} alt="Share"/>
               <span>Host a Session</span>
