@@ -6,6 +6,8 @@ const AppMenu = require("./AppMenu");
 const session = require("./session.js");
 const WindowsModule = require("./windows");
 
+const {GoogleCred} = require("./api/google.js");
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -17,6 +19,8 @@ let dev = false;
 // if (process.defaultApp || /[\\/]electron-prebuilt[\\/]/.test(process.execPath) || /[\\/]electron[\\/]/.test(process.execPath)) {
 //   dev = true
 // }
+
+
 
 if (process.env.NODE_ENV !== undefined && process.env.NODE_ENV === 'development') {
   dev = true;
@@ -113,8 +117,14 @@ app.on('ready', () => {
     mainWindow.setSize(900, 600, true);
   })
 
-  ipcMain.on("login:google", () => {
-    WindowsModule.createGoogleLoginWindow();
+  ipcMain.on("login:googleSuccess", (e, cred) => {
+    console.log("Google Login Success");
+    GoogleCred.setCredentials(cred);
+    //console.log(GoogleCred.getCredentials()); //for debugging or seeing attribute names
+  })
+  ipcMain.on("login:googleFailure", (e, mess) => {
+    console.log("Google Login Failure");
+    //console.log(mess); //for debugging or seeing error codes
   })
 
   ipcMain.on("login:spotify", () => {

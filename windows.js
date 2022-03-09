@@ -264,5 +264,4 @@ module.exports = {
     createVolumeWindow,
     createHostPanelWindow,
     createSpotifyLoginWindow,
-    createGoogleLoginWindow
 }
