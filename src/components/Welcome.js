@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { GoogleLogin } from 'react-google-login';
 
@@ -26,6 +26,13 @@ const Welcome = () => {
         ipcRenderer.send("login:googleFailure", response);
         setGoogleAuth(false);
     }
+
+    // if both services are authenticated, move to the connection screen
+    useEffect(() => {
+        if (googleAuth && spotifyAuth) {
+            navigate("/connect");
+        }
+    }, [googleAuth, spotifyAuth])
 
     // run some tests in here to check if user is authenticated with spotify and google. If so, navigate them to /connect by default in a useEffect() hook
     return (
