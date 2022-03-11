@@ -1,3 +1,6 @@
+const {Database} = require("./api/firebase.js");
+
+
 function generateSesId(){
     let result = '';
     let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; //List of characters to choose from
@@ -9,19 +12,35 @@ function generateSesId(){
     return result;
 }
 
-function joinSession(id){
+class Session{
+
+    queue = [];
+
+    static joinSession(id){
+        Database.initServer();
+        Database.requestCredentials();
+        Database.getData("Server/" + id, (snapshot) => { 
+        
+            snapshot.val();
+        });
     
-   
-    //socket = Call firebase to get shared socket information and store it in socket
-    //while(socket == -1) 
-       // socket = Call firebase to get shared socket information and store it in socket
-    
+    }
+
+    static createSession(){
+        id = generateSesId();
+        Database.initServer();
+        Database.requestCredentials();
+        Database.createData("Server/" + id, {});
+        //Send id to firebase
+
+    }
+
+    static deleteSession(id){
+        Database.deleteData("Server/" + id);
+    }
 }
 
-function createSession(){
-    id = generateSesId();
-    //Send id to firebase
-
+module.exports = {
+    Session
 }
-
 exports.generateSesId = generateSesId;

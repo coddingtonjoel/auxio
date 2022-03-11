@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const main = require("./main.js")
+const {SpotifyCred} = require("./api/spotify.js");
 const url = require("url");
 // THIS FILE CONTAINS WINDOW INFORMATION FOR HOST PANEL, VOLUME, QUEUE, AND SEARCH CONTROLS.
 
@@ -194,7 +195,8 @@ function createHostPanelWindow() {
         const result = spotify.webContents.getURL();
         const code = new URL(result).searchParams.get("code");
         //^ this should give the code but window isn't defined even tho as you type window it says the correct thing
-        console.log(code);
+        SpotifyCred.login(code);
+        console.log("Successful Spotify Login");
         main.authSpotify();
         spotify.close();
       }
