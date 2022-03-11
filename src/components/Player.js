@@ -11,9 +11,6 @@ import playIcon from "../assets/icons/play.svg";
 import pauseIcon from "../assets/icons/pause.svg";
 import prevIcon from "../assets/icons/previous.svg";
 import nextIcon from "../assets/icons/skip.svg";
-import songIcon from "../assets/icons/song.svg";
-import artistIcon from "../assets/icons/person.svg";
-import albumIcon from "../assets/icons/album.svg";
 import Slider from "@mui/material/Slider";
 
 // turn song from seconds into minutes
@@ -56,13 +53,29 @@ const Player = () => {
     }
   */
 
+  const handleVolumeOpener = () => {
+    ipcRenderer.send("open:volume");
+  }
+
+  const handleHostPanelOpener = () => {
+    ipcRenderer.send("open:hostpanel");
+  }
+
+  const handleQueueOpener = () => {
+    ipcRenderer.send("open:queue");
+  }
+
+  const handleSearchOpener = () => {
+    ipcRenderer.send("open:search");
+  }
+    
   return (
     <Wrapper>
       <span className="session-id">SES-SSION-CODE</span>
       <div className="control-buttons">
         {/* host panel is only available as a session host */}
         {isHost ? (
-          <button>
+          <button onClick={handleHostPanelOpener}>
             <img
               draggable={false}
               src={roomPreferences}
@@ -70,13 +83,13 @@ const Player = () => {
             />
           </button>
         ) : null}
-        <button>
+        <button onClick={handleQueueOpener}>
           <img draggable={false} src={queueIcon} alt="Queue" />
         </button>
-        <button>
+        <button onClick={handleSearchOpener}>
           <img draggable={false} src={searchIcon} alt="Search" />
         </button>
-        <button>
+        <button onClick={handleVolumeOpener}>
           <img draggable={false} src={volumeIcon} alt="Volume" />
         </button>
       </div>
@@ -102,15 +115,15 @@ const Player = () => {
           <div className="info-control-container">
             <div className="song-info">
               <h3 className="title">
-                <img draggable={false} src={songIcon} alt="Song" />
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
                 Placeholder Title
               </h3>
               <h5 className="artist">
-                <img draggable={false} src={artistIcon} alt="Artist" />
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                 Artist Name
               </h5>
               <p className="album">
-                <img draggable={false} src={albumIcon} alt="Album" />
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
                 Album Title
               </p>
             </div>
@@ -173,7 +186,8 @@ const Player = () => {
 };
 
 const Wrapper = styled.div`
-  position: relative;
+  position: relative; 
+  padding: 8px;
 
   .MuiSlider-thumb.Mui-focusVisible, .MuiSlider-thumb:hover {
     box-shadow:none !important;
@@ -189,15 +203,15 @@ const Wrapper = styled.div`
     font-weight: 700;
     user-select: none;
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 8px;
+    left: 8px;
     font-size: 14px;
   }
 
   .control-buttons {
     position: absolute;
-    top: 5px;
-    right: 0px;
+    top: 13px;
+    right: 8px;
 
     button {
       height: 40px;
@@ -273,7 +287,7 @@ const Wrapper = styled.div`
             width: 300px;
             margin-bottom: -5px;
 
-            img {
+            svg {
               margin-right: 8px;
             }
           }
@@ -281,8 +295,8 @@ const Wrapper = styled.div`
           .title {
             font-size: 33px;
             
-            img {
-              transform: translateY(3px);
+            svg {
+              transform: translateY(1px);
             }
           }
 
@@ -291,8 +305,8 @@ const Wrapper = styled.div`
             font-weight: 400;
             transform: translateY(-10px);
 
-            img {
-              transform: translateY(5px);
+            svg {
+              transform: translateY(4px);
             }
           }
 
@@ -301,7 +315,7 @@ const Wrapper = styled.div`
             margin-top: 20px;
             transform: translateY(-25px);
 
-            img {
+            svg {
               transform: translateY(6px);
             }
           }
@@ -325,6 +339,7 @@ const Wrapper = styled.div`
         border-radius: 3px;
         cursor: pointer;
         transition: 0.15s;
+        box-shadow: ${props => props.theme.boxShadow};
 
         img {
           user-select: none;

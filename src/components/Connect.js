@@ -11,11 +11,11 @@ const Connect = () => {
         <div className="button-container">
           {/* Write a handler for this that starts loading, sends an IPC message to backend to generate code, and waits for an OK to stop loading and navigate to /player */}
           <Link draggable={false} to="/player">
-              <img src={shareIcon} alt="Share"/>
+              <img draggable={false} src={shareIcon} alt="Share"/>
               <span>Host a Session</span>
           </Link>
           <Link draggable={false} to="/join">
-              <img src={headphonesIcon} alt="Share"/>
+              <img draggable={false} src={headphonesIcon} alt="Share"/>
               <span>Join a Session</span>
           </Link>
         </div>
@@ -24,6 +24,10 @@ const Connect = () => {
 };
 
 const Wrapper = styled.div`
+  span {
+    user-select: none;
+  }
+  
   .button-container {
     display: flex;
     align-items: center;
@@ -68,6 +72,7 @@ const Wrapper = styled.div`
   img {
     height: 80px;
     margin-bottom: 10px;
+    user-select: none;
   }
 `;
 

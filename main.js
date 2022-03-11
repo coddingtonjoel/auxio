@@ -1,11 +1,10 @@
 // Import parts of electron to use
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, screen } = require('electron')
 const path = require('path')
 const url = require('url')
 const AppMenu = require("./AppMenu");
 const session = require("./session.js");
 const WindowsModule = require("./windows");
-
 const {GoogleCred} = require("./api/google.js");
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -94,7 +93,10 @@ function createMainWindow() {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   createMainWindow();
+  const mainScreen = screen.getPrimaryDisplay;
+  const monitorWidth = mainScreen().size.width;
   new AppMenu (dev, mainWindow);
+  mainWindow.theme = "Light";
   // ipcMain listeners go here!
 
   // ex: listener with data param
@@ -109,7 +111,7 @@ app.on('ready', () => {
 
   // resize mainWindow to player size
   ipcMain.on("windowSize:player", () => {
-    mainWindow.setSize(650, 450, true);
+    mainWindow.setSize(650, 460, true);
   });
 
   // resize mainWindow to welcome/connect size
@@ -127,16 +129,39 @@ app.on('ready', () => {
     //console.log(mess); //for debugging or seeing error codes
   })
 
+  ipcMain.on("setTheme", () => {
+    // send color scheme event to all open windows
+    if (mainWindow.theme === "Light") {
+      mainWindow.theme = "Dark";
+    }
+    else if (mainWindow.theme === "Dark") {
+      mainWindow.theme = "Light";
+    }
+    else mainWindow.theme = "Light";
+    console.log(mainWindow.theme);
+  })
+
+  // window openers/closers for frontend use
+
   ipcMain.on("login:spotify", () => {
     WindowsModule.createSpotifyLoginWindow();
   })
- 
-  // ipc listeners will be included here for new window calls that get triggered on the frontend auxio player window.
-  // this means that there will eventually be four listeners that respectively call:
-      // WindowsModule.createVolumeWindow();
-      // WindowsModule.createQueueWindow();
-      // WindowsModule.createSearchWindow();
-      // WindowsModule.createHostPanelWindow();
+
+  ipcMain.on("open:volume", () => {
+    WindowsModule.createVolumeWindow(mainWindow, monitorWidth);
+  })
+
+  ipcMain.on("open:queue", () => {
+    WindowsModule.createQueueWindow(mainWindow, monitorWidth);
+  })
+
+  ipcMain.on("open:search", () => {
+    WindowsModule.createSearchWindow(mainWindow, monitorWidth);
+  })
+
+  ipcMain.on("open:hostpanel", () => {
+    WindowsModule.createHostPanelWindow(mainWindow, monitorWidth);
+  })
 })
 
 // Quit when all windows are closed.
