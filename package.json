@@ -37,6 +37,7 @@
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
     "@mui/material": "^5.4.1",
+    "express": "^4.17.2",
     "electron-installer-dmg": "^3.0.0",
     "electron-window-position": "^1.0.1",
     "electron-winstaller": "^5.0.0",
@@ -46,6 +47,7 @@
     "react-google-login": "^5.2.2",
     "react-helmet": "^6.1.0",
     "react-router-dom": "^6.2.1",
+    "spotify-web-api-node": "^5.0.2",
     "react-transition-group": "^4.4.2",
     "styled-components": "^5.3.3"
   },

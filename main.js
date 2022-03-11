@@ -180,3 +180,10 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+function authSpotify(){
+  //console.log("Success!");
+  mainWindow.webContents.send("auth:spotify");
+}
+
+exports.authSpotify = authSpotify;
