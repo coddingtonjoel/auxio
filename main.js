@@ -130,7 +130,7 @@ app.on('ready', () => {
   ipcMain.on("login:spotify", () => {
     WindowsModule.createSpotifyLoginWindow();
   })
-
+ 
   // ipc listeners will be included here for new window calls that get triggered on the frontend auxio player window.
   // this means that there will eventually be four listeners that respectively call:
       // WindowsModule.createVolumeWindow();
@@ -155,3 +155,10 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+function authSpotify(){
+  //console.log("Success!");
+  mainWindow.webContents.send("auth:spotify");
+}
+
+exports.authSpotify = authSpotify;

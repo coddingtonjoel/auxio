@@ -1,6 +1,6 @@
 const { Menu, BrowserWindow } = require("electron");
 const WindowsModule = require("./windows");
-
+const SpotifyLogin =  require("./api/spotify.js");
 const {Database} = require("./api/firebase.js");
 const googleLogin = require("./api/google.js");
 
@@ -95,6 +95,12 @@ class AppMenu extends Menu {
             label: "DatabaseTestRead()",
             click: () => {
               Database.getData("userData/user1123581321345589", (snapshot) => { console.log(snapshot.val()); });
+            }
+          },
+          {
+            label: "loginSpotify()",
+            click: () => {
+              SpotifyLogin.login();
             }
           },
           {
