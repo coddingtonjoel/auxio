@@ -1,7 +1,6 @@
 const { app, BrowserWindow } = require('electron')
 const main = require("./main.js")
 const {SpotifyCred} = require("./api/spotify.js");
-const url = require("url");
 // THIS FILE CONTAINS WINDOW INFORMATION FOR HOST PANEL, VOLUME, QUEUE, AND SEARCH CONTROLS.
 
 // Keep a reference for dev mode
@@ -183,53 +182,54 @@ function createSearchWindow(mainWindow, monitorWidth) {
 }
 
 function createHostPanelWindow(mainWindow, monitorWidth) {
-  // Create the browser window.
-  if (hostPanel === null) {
-    // I don't think this functionality should be here for the host panel
-    // mainWindow.on("focus", () => {
-    //   closeHostPanelWindow();
-    // })
+    // Create the browser window.
+    if (hostPanel === null) {
+      // I don't think this functionality should be here for the host panel
+      // mainWindow.on("focus", () => {
+      //   closeHostPanelWindow();
+      // })
 
-    hostPanel = new BrowserWindow({
-      width: 400,
-      height: 900,
-      frame: true, // TBD
-      show: false,
-      icon: `${__dirname}/src/assets/images/logo.png`,
-      resizable: false,
-      webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false
-      }
-    });
-  
-    hostPanel.loadURL(`file://${__dirname}/dist/index.html#/host`);
-  
-    // Don't show until we are ready and loaded
-    hostPanel.once('ready-to-show', () => {
-      hostPanel.show()
-  
-      // Open the DevTools automatically if developing
-      if (dev) {
-        const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
-  
-        installExtension(REACT_DEVELOPER_TOOLS)
-          .catch(err => console.log('Error loading React DevTools: ', err))
-        // ~mainWindow.webContents.openDevTools()
-      }
-    })
-  
-    // Emitted when the window is closed.
-    hostPanel.on('closed', function() {
-      hostPanel = null
-    })
+      hostPanel = new BrowserWindow({
+        width: 400,
+        height: 900,
+        frame: true, // TBD
+        show: false,
+        icon: `${__dirname}/src/assets/images/logo.png`,
+        resizable: false,
+        webPreferences: {
+          nodeIntegration: true,
+          contextIsolation: false
+        }
+      });
+    
+      hostPanel.loadURL(`file://${__dirname}/dist/index.html#/host`);
+    
+      // Don't show until we are ready and loaded
+      hostPanel.once('ready-to-show', () => {
+        hostPanel.show()
+    
+        // Open the DevTools automatically if developing
+        if (dev) {
+          const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
+    
+          installExtension(REACT_DEVELOPER_TOOLS)
+            .catch(err => console.log('Error loading React DevTools: ', err))
+          // ~mainWindow.webContents.openDevTools()
+        }
+      })
+    
+      // Emitted when the window is closed.
+      hostPanel.on('closed', function() {
+        hostPanel = null
+      })
+    }
   }
 
   function createSpotifyLoginWindow() {
     // Create the browser window.
     let spotify = new BrowserWindow({
-      width: 500,
-      height: 500,
+      width: 700,
+      height: 800,
       frame: true, // TBD
       show: false,
       icon: `${__dirname}/src/assets/images/logo.png`,
@@ -269,8 +269,6 @@ function createHostPanelWindow(mainWindow, monitorWidth) {
       }
     })
 
-    
-   
     // Emitted when the window is closed.
     spotify.on('closed', function() {
       hostPanel = null
@@ -280,8 +278,8 @@ function createHostPanelWindow(mainWindow, monitorWidth) {
   function createGoogleLoginWindow() {
     // Create the browser window.
     google = new BrowserWindow({
-      width: 500,
-      height: 500,
+      width: 700,
+      height: 800,
       frame: true, // TBD
       show: false,
       icon: `${__dirname}/src/assets/images/logo.png`,

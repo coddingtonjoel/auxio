@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { GoogleLogin } from 'react-google-login';
-
 import styled from 'styled-components';
 import openin from "../assets/icons/openin.svg";
 import authInProg from "../assets/icons/auth-inprog.svg";
@@ -26,6 +25,12 @@ const Welcome = () => {
         ipcRenderer.send("login:googleFailure", response);
         setGoogleAuth(false);
     }
+
+    useEffect(() => {
+        ipcRenderer.on("auth:spotify", () => {
+            setSpotifyAuth(true);
+        })
+    }, []);
 
     // if both services are authenticated, move to the connection screen
     useEffect(() => {
@@ -73,8 +78,6 @@ const Welcome = () => {
                 
                 </div>
             </Wrapper>
-            {/* Temporary bypass; the progression to /connect will be handled by a navigation call upon completion of google/spotify logins */}
-            <Link to="/connect">Temporary Bypass to /connect</Link>
         </React.Fragment>
         
     );
