@@ -1,9 +1,14 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow } = require('electron')
 
 // THIS FILE CONTAINS WINDOW INFORMATION FOR HOST PANEL, VOLUME, QUEUE, AND SEARCH CONTROLS.
 
 // Keep a reference for dev mode
 let dev = false;
+let volumeWindow = null;
+let queueWindow = null;
+let searchWindow = null;
+let hostPanel = null;
+const playerWidth = 650;
 
 // Broken:
 // if (process.defaultApp || /[\\/]electron-prebuilt[\\/]/.test(process.execPath) || /[\\/]electron[\\/]/.test(process.execPath)) {
@@ -21,147 +26,207 @@ if (process.platform === 'win32') {
   app.commandLine.appendSwitch('force-device-scale-factor', '1');
 }
 
-function createVolumeWindow() {
+function createVolumeWindow(mainWindow, monitorWidth) {
   // Create the browser window.
-  volumeWindow = new BrowserWindow({
-    width: 200,
-    height: 100,
-    frame: false,
-    show: false,
-    icon: `${__dirname}/src/assets/images/logo.png`,
-    resizable: false,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
-  });
+  if (volumeWindow === null) {
+    const mainWindowPos = mainWindow.getPosition();
 
-  volumeWindow.loadURL(`file://${__dirname}/dist/index.html#/volume`);
+    mainWindow.on("focus", () => {
+      closeVolumeWindow();
+    })
 
-  // Don't show until we are ready and loaded
-  volumeWindow.once('ready-to-show', () => {
-    volumeWindow.show()
+    volumeWindow = new BrowserWindow({
+      x: mainWindowPos[0] + playerWidth + 20,
+      y: mainWindowPos[1] + 20,
+      width: 200,
+      height: 75,
+      frame: false,
+      show: false,
+      icon: `${__dirname}/src/assets/images/logo.png`,
+      resizable: false,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false
+      }
+    });
+  
+    volumeWindow.loadURL(`file://${__dirname}/dist/index.html#/volume`);
+  
+    // Don't show until we are ready and loaded
+    volumeWindow.once('ready-to-show', () => {
+      volumeWindow.show()
+  
+      // Open the DevTools automatically if developing
+      if (dev) {
+        const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
+  
+        installExtension(REACT_DEVELOPER_TOOLS)
+          .catch(err => console.log('Error loading React DevTools: ', err))
+        // ~mainWindow.webContents.openDevTools()
+      }
 
-    // Open the DevTools automatically if developing
-    if (dev) {
-      const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
-
-      installExtension(REACT_DEVELOPER_TOOLS)
-        .catch(err => console.log('Error loading React DevTools: ', err))
-      // ~mainWindow.webContents.openDevTools()
-    }
-  })
-
-  // Emitted when the window is closed.
-  volumeWindow.on('closed', function() {
-    volumeWindow = null
-  })
+      if (mainWindow.theme === "Dark") {
+        volumeWindow.webContents.send("colorScheme", {message: "Dark"});
+      }
+      else {
+        volumeWindow.webContents.send("colorScheme", {message: "Light"});
+      }
+    })
+  }
+  else {
+    closeVolumeWindow();
+  }
 }
 
-function createQueueWindow() {
+function createQueueWindow(mainWindow, monitorWidth) {
   // Create the browser window.
-  queueWindow = new BrowserWindow({
-    width: 400,
-    height: 900,
-    frame: false,
-    show: false,
-    resizable: false,
-    icon: `${__dirname}/src/assets/images/logo.png`,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
-  });
+  if (queueWindow === null) {
+    const mainWindowPos = mainWindow.getPosition();
+    mainWindow.on("focus", () => {
+      closeQueueWindow();
+    })
 
-  queueWindow.loadURL(`file://${__dirname}/dist/index.html#/queue`);
+    queueWindow = new BrowserWindow({
+      x: mainWindowPos[0] + playerWidth + 20,
+      y: mainWindowPos[1],
+      width: 400,
+      height: 600,
+      frame: false,
+      show: false,
+      resizable: false,
+      icon: `${__dirname}/src/assets/images/logo.png`,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false
+      }
+    });
+  
+    queueWindow.loadURL(`file://${__dirname}/dist/index.html#/queue`);
+  
+    // Don't show until we are ready and loaded
+    queueWindow.once('ready-to-show', () => {
+      queueWindow.show()
+  
+      // Open the DevTools automatically if developing
+      if (dev) {
+        const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
+  
+        installExtension(REACT_DEVELOPER_TOOLS)
+          .catch(err => console.log('Error loading React DevTools: ', err))
+        // ~mainWindow.webContents.openDevTools()
+      }
 
-  // Don't show until we are ready and loaded
-  queueWindow.once('ready-to-show', () => {
-    queueWindow.show()
-
-    // Open the DevTools automatically if developing
-    if (dev) {
-      const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
-
-      installExtension(REACT_DEVELOPER_TOOLS)
-        .catch(err => console.log('Error loading React DevTools: ', err))
-      // ~mainWindow.webContents.openDevTools()
-    }
-  })
-
-  // Emitted when the window is closed.
-  queueWindow.on('closed', function() {
-    queueWindow = null
-  })
+      if (mainWindow.theme === "Dark") {
+        queueWindow.webContents.send("colorScheme", {message: "Dark"});
+      }
+      else {
+        queueWindow.webContents.send("colorScheme", {message: "Light"});
+      }
+    })
+  }
+  else {
+    closeQueueWindow();
+  }
 }
 
-function createSearchWindow() {
+function createSearchWindow(mainWindow, monitorWidth) {
   // Create the browser window.
-  searchWindow = new BrowserWindow({
-    width: 400,
-    height: 900,
-    frame: false,
-    show: false,
-    icon: `${__dirname}/src/assets/images/logo.png`,
-    resizable: false,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
-  });
+  if (searchWindow === null) {
+    const mainWindowPos = mainWindow.getPosition();
+    mainWindow.on("focus", () => {
+      closeSearchWindow();
+    })
 
-  searchWindow.loadURL(`file://${__dirname}/dist/index.html#/search`);
+    searchWindow = new BrowserWindow({
+      x: mainWindowPos[0] + playerWidth + 20,
+      y: mainWindowPos[1],
+      width: 400,
+      height: 600,
+      frame: false,
+      show: false,
+      icon: `${__dirname}/src/assets/images/logo.png`,
+      resizable: false,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false
+      }
+    });
+  
+    searchWindow.loadURL(`file://${__dirname}/dist/index.html#/search`);
+  
+    // Don't show until we are ready and loaded
+    searchWindow.once('ready-to-show', () => {
+      searchWindow.show()
+  
+      // Open the DevTools automatically if developing
+      if (dev) {
+        const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
+  
+        installExtension(REACT_DEVELOPER_TOOLS)
+          .catch(err => console.log('Error loading React DevTools: ', err))
+        // ~mainWindow.webContents.openDevTools()
+      }
 
-  // Don't show until we are ready and loaded
-  searchWindow.once('ready-to-show', () => {
-    searchWindow.show()
-
-    // Open the DevTools automatically if developing
-    if (dev) {
-      const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
-
-      installExtension(REACT_DEVELOPER_TOOLS)
-        .catch(err => console.log('Error loading React DevTools: ', err))
-      // ~mainWindow.webContents.openDevTools()
-    }
-  })
-
-  // Emitted when the window is closed.
-  searchWindow.on('closed', function() {
-    searchWindow = null
-  })
+      if (mainWindow.theme === "Dark") {
+        searchWindow.webContents.send("colorScheme", {message: "Dark"});
+      }
+      else {
+        searchWindow.webContents.send("colorScheme", {message: "Light"});
+      }
+    })
+  }
+  else {
+    closeSearchWindow();
+  }
 }
 
-function createHostPanelWindow() {
+function createHostPanelWindow(mainWindow, monitorWidth) {
   // Create the browser window.
-  hostPanel = new BrowserWindow({
-    width: 400,
-    height: 900,
-    frame: true, // TBD
-    show: false,
-    icon: `${__dirname}/src/assets/images/logo.png`,
-    resizable: false,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
-  });
+  if (hostPanel === null) {
+    // I don't think this functionality should be here for the host panel
+    // mainWindow.on("focus", () => {
+    //   closeHostPanelWindow();
+    // })
 
-  hostPanel.loadURL(`file://${__dirname}/dist/index.html#/host`);
+    hostPanel = new BrowserWindow({
+      width: 400,
+      height: 900,
+      frame: true, // TBD
+      show: false,
+      icon: `${__dirname}/src/assets/images/logo.png`,
+      resizable: false,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false
+      }
+    });
+  
+    hostPanel.loadURL(`file://${__dirname}/dist/index.html#/host`);
+  
+    // Don't show until we are ready and loaded
+    hostPanel.once('ready-to-show', () => {
+      hostPanel.show()
+  
+      // Open the DevTools automatically if developing
+      if (dev) {
+        const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
+  
+        installExtension(REACT_DEVELOPER_TOOLS)
+          .catch(err => console.log('Error loading React DevTools: ', err))
+        // ~mainWindow.webContents.openDevTools()
+      }
 
-  // Don't show until we are ready and loaded
-  hostPanel.once('ready-to-show', () => {
-    hostPanel.show()
-
-    // Open the DevTools automatically if developing
-    if (dev) {
-      const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
-
-      installExtension(REACT_DEVELOPER_TOOLS)
-        .catch(err => console.log('Error loading React DevTools: ', err))
-      // ~mainWindow.webContents.openDevTools()
-    }
-  })
+      if (mainWindow.theme === "Dark") {
+        hostPanel.webContents.send("colorScheme", {message: "Dark"});
+      }
+      else {
+        hostPanel.webContents.send("colorScheme", {message: "Light"});
+      }
+    })
+  }
+  else {
+    hostPanel.focus();
+  }
 
   // Emitted when the window is closed.
   hostPanel.on('closed', function() {
@@ -206,10 +271,58 @@ function createSpotifyLoginWindow() {
   })
 }
 
+function closeVolumeWindow() {
+  try {
+    if (volumeWindow !== null) {
+      volumeWindow.close();
+      volumeWindow = null;
+    }
+  }
+  catch(err) {
+    console.log(err);
+  }
+}
+
+function closeQueueWindow() {
+  try {
+    if (queueWindow !== null) {
+      queueWindow.close();
+      queueWindow = null;
+    }
+  }
+  catch(err) {
+    console.log(err);
+  }
+}
+
+function closeSearchWindow() {
+  try {
+    if (searchWindow !== null) {
+      searchWindow.close();
+      searchWindow = null;
+    }
+  }
+  catch(err) {
+    console.log(err);
+  }
+}
+
+function closeHostPanelWindow() {
+  try {
+    if (hostPanel !== null) {
+      hostPanel.close();
+      hostPanel = null;
+    }
+  }
+  catch(err) {
+    console.log(err);
+  }
+}
+
 module.exports = {
     createQueueWindow,
     createSearchWindow,
     createVolumeWindow,
     createHostPanelWindow,
-    createSpotifyLoginWindow,
+    createSpotifyLoginWindow
 }

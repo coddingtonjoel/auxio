@@ -25,7 +25,18 @@ class AppMenu extends Menu {
         {
           label: "Toggle Light/Dark Mode",
           click: () => {
-              win.webContents.send("colorScheme");
+              // send color scheme event to all open windows
+              if (win.theme === "Light") {
+                win.theme = "Dark";
+              }
+              else if (win.theme === "Dark") {
+                win.theme = "Light";
+              }
+              const windows = BrowserWindow.getAllWindows();
+              windows.forEach((w) => {
+                w.webContents.send("colorScheme", {message: win.theme});
+              })
+
           },
           accelerator: "CmdOrCtrl+P"
         }
