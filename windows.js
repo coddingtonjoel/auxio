@@ -242,6 +242,7 @@ function createHostPanelWindow(mainWindow, monitorWidth) {
     
     spotify.loadURL("https://accounts.spotify.com/authorize?client_id=2bab0f940a6547628f9beb01de54e982&response_type=code&redirect_uri=http://localhost:8080&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state");
 
+    // called upon successful login
     spotify.webContents.on("did-navigate", () => {
       // upon navigation, check if it made it to localhost (because it goes to the spotify scope page in-between)
       // if so, get the URL params and close the window
@@ -249,12 +250,13 @@ function createHostPanelWindow(mainWindow, monitorWidth) {
         const result = spotify.webContents.getURL();
         const code = new URL(result).searchParams.get("code");
         //^ this should give the code but window isn't defined even tho as you type window it says the correct thing
-        SpotifyCred.login(code);
-        setTimeout(() => {
+        // SpotifyCred.login(code);
+
+        // wait for spotify api secret to be received from DB then login
+        SpotifyCred.login(code).then(() => {
           SpotifyCred.test();
-          
-          
-        }, 5000); 
+        })
+
         console.log("Successful Spotify Login");
         main.authSpotify();
         spotify.close(); 
@@ -276,43 +278,6 @@ function createHostPanelWindow(mainWindow, monitorWidth) {
 
     // Emitted when the window is closed.
     spotify.on('closed', function() {
-      hostPanel = null
-    })
-  }
-
-  function createGoogleLoginWindow() {
-    // Create the browser window.
-    google = new BrowserWindow({
-      width: 700,
-      height: 800,
-      frame: true, // TBD
-      show: false,
-      icon: `${__dirname}/src/assets/images/logo.png`,
-      resizable: false,
-      webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false
-      }
-    });
-  
-    google.loadURL("https://www.google.com/");
-  
-    // Don't show until we are ready and loaded
-    google.once('ready-to-show', () => {
-      google.show()
-  
-      // Open the DevTools automatically if developing
-      if (dev) {
-        const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer')
-  
-        installExtension(REACT_DEVELOPER_TOOLS)
-          .catch(err => console.log('Error loading React DevTools: ', err))
-        // ~mainWindow.webContents.openDevTools()
-      }
-    })
-  
-    // Emitted when the window is closed.
-    google.on('closed', function() {
       hostPanel = null
     })
   }
