@@ -4,6 +4,16 @@ const {Database} = require("./firebase.js");
 
 let secret = "";
 
+
+class songStruct{
+  static title;
+  static artist;
+  static album;
+  static albumArt;
+  static id;
+}
+
+
 class SpotifyCred{
   
   
@@ -16,16 +26,35 @@ class SpotifyCred{
     return SpotifyCred.accessT;
   }
 
-  static test(){
-      SpotifyCred.spotifyApi.getArtistAlbums('43ZHCT0cAZBISjO8DG9PnE').then(
-        function(data) {
-          console.log('Artist albums', data.body);
-        },
-        function(err) {
+ 
+  struct
+
+
+
+  static search(str){
+      SpotifyCred.spotifyApi.searchTracks(str,{ limit: 10 }).then(function(data) {
+        let songs = data.body.tracks.items;
+        let returnSongs = [];
+        //console.log(songs);
+        songs.forEach(item => {
+            let curr = new songStruct;
+            curr.title = item.name;
+            let artistArr = [];
+            item.artists.forEach(item2 => {
+              artistArr.push(item2.name)
+            });
+            curr.artists = artistArr;
+            curr.album = item.album.name;
+            curr.id = item.id;
+            curr.albumArt = item.images;
+            return curr;
+        }); 
+      }, function(err) {
           console.error(err);
-        }
-      );
+      });
   }
+
+  
 
   static refresh(){
      
