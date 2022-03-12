@@ -47,8 +47,9 @@ class SpotifyCred{
             curr.album = item.album.name;
             curr.id = item.id;
             curr.albumArt = item.images;
-            return curr;
+            returnSongs.push(curr);
         }); 
+        return returnSongs;
       }, function(err) {
           console.error(err);
       });
