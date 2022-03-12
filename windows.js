@@ -250,9 +250,14 @@ function createHostPanelWindow(mainWindow, monitorWidth) {
         const code = new URL(result).searchParams.get("code");
         //^ this should give the code but window isn't defined even tho as you type window it says the correct thing
         SpotifyCred.login(code);
+        setTimeout(() => {
+          SpotifyCred.test();
+          
+          
+        }, 5000); 
         console.log("Successful Spotify Login");
         main.authSpotify();
-        spotify.close();
+        spotify.close(); 
       }
     })
     // Don't show until we are ready and loaded
