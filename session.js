@@ -14,29 +14,48 @@ function generateSesId(){
 
 class Session{
 
-    queue = [];
+    
+    queue = ["test","test2"];
+    sId = "";
 
     static joinSession(id){
+        Session.sId = id;
         Database.initServer();
         Database.requestCredentials();
         Database.getData("Server/" + id, (snapshot) => { 
-        
-            snapshot.val();
+            Session.queue = snapshot.val();
         });
     
     }
 
+    static test(){
+        return Session.queue;
+    }
+
+    static getId(){
+        return Session.sId;
+    }
+
+    static queueSong(songId){
+        // Queue not currently working
+        Session.queue.push(songId);
+        Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+    }
+
     static createSession(){
-        id = generateSesId();
+        Session.sId = generateSesId();
         Database.initServer();
         Database.requestCredentials();
-        Database.createData("Server/" + id, {});
+        //let tQueue = Session.queue;
+        Database.createData("Server/" + Session.sId, { "queue" : ["test2"]});
+        //Database.createData("Server/" + Session.sId, { "queue" : ["test2"]});
         //Send id to firebase
 
     }
 
-    static deleteSession(id){
-        Database.deleteData("Server/" + id);
+    static deleteSession(){
+        Database.deleteData("Server/" + Session.sId);
+        Session.sId = "";
     }
 }
 

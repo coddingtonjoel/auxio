@@ -3,6 +3,7 @@ const WindowsModule = require("./windows");
 const SpotifyLogin =  require("./api/spotify.js");
 const {Database} = require("./api/firebase.js");
 const googleLogin = require("./api/google.js");
+const {Session} = require("./session.js");
 
 const isMac = process.platform === "darwin";
 
@@ -106,6 +107,39 @@ class AppMenu extends Menu {
             label: "DatabaseTestRead()",
             click: () => {
               Database.getData("userData/user1123581321345589", (snapshot) => { console.log(snapshot.val()); });
+            }
+          },
+          {
+            label: "createSession",
+            click: () => {
+                Session.createSession();
+                let id = Session.getId();
+                console.log("Created Session With Id:", id); //for debugging or seeing attribute names
+            }
+          },
+          {
+            label: "deleteSession",
+            click: () => {
+                let id = Session.getId();
+                if(id != ""){
+                    Session.deleteSession();
+                    console.log("Deleted Session With Id:", id); //for debugging or seeing attribute names
+                }
+            }
+          },
+          {
+            label: "joinSession",
+            click: () => {
+                Session.joinSession("GOO-ZK7-10MG")
+                setTimeout(() => {
+                  console.log(Session.test());
+                }, 3000);
+            }
+          },
+          {
+            label: "queueSong",
+            click: () => {
+                Session.queueSong("Bury a Friend");
             }
           },
           {
