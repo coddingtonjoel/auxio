@@ -255,7 +255,11 @@ function createHostPanelWindow(mainWindow, monitorWidth) {
         // wait for spotify api secret to be received from DB then login
         
         //SpotifyCred.login(code).then(() => {
-          //SpotifyCred.search("Bury");
+            //SpotifyCred.search("Bury");
+          //setTimeout(() => {
+          //  console.log("Testing the songs after the search:");
+          //  console.log(songs);
+          //}, 4000);
         //})
 
         console.log("Successful Spotify Login");

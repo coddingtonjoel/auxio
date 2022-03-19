@@ -4,6 +4,7 @@ const SpotifyLogin =  require("./api/spotify.js");
 const {Database} = require("./api/firebase.js");
 const googleLogin = require("./api/google.js");
 const {Session} = require("./session.js");
+const {songStruct} = require("./api/spotify.js")
 
 const isMac = process.platform === "darwin";
 
@@ -130,16 +131,27 @@ class AppMenu extends Menu {
           {
             label: "joinSession",
             click: () => {
-                Session.joinSession("GOO-ZK7-10MG")
-                setTimeout(() => {
-                  console.log(Session.test());
-                }, 3000);
+                Session.joinSession("2FI-ULR-844P");
+                console.log("Joined the session");
             }
           },
           {
             label: "queueSong",
             click: () => {
-                Session.queueSong("Bury a Friend");
+                let song = new songStruct;
+                song.artist = ["Daniel March"];
+                song.album = "Rock Enthusiast"
+                song.albumArt = "";
+                song.title = "Jesse diss track";
+                song.id = "test";
+                Session.queueSong(song);
+            }
+          },
+          {
+            label: "deleteSong",
+            click: () => {
+                Session.clearQueue();  
+              //Session.deleteSong("test");
             }
           },
           {

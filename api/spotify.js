@@ -2,15 +2,17 @@ var SpotifyWebApi = require('spotify-web-api-node');
 const express = require("express");
 const {Database} = require("./firebase.js");
 
+
 let secret = "";
 
 
 class songStruct{
-  static title;
-  static artist;
+  
   static album;
   static albumArt;
+  static artist;
   static id;
+  static title;
 }
 
 
@@ -26,30 +28,42 @@ class SpotifyCred{
     return SpotifyCred.accessT;
   }
 
- 
-  struct
-
-
 
   static search(str){
-      SpotifyCred.spotifyApi.searchTracks(str,{ limit: 10 }).then(function(data) {
-        let songs = data.body.tracks.items;
-        let returnSongs = [];
-        //console.log(songs);
-        songs.forEach(item => {
-            let curr = new songStruct;
-            curr.title = item.name;
-            let artistArr = [];
-            item.artists.forEach(item2 => {
-              artistArr.push(item2.name)
-            });
-            curr.artists = artistArr;
-            curr.album = item.album.name;
-            curr.id = item.id;
-            curr.albumArt = item.images;
-            returnSongs.push(curr);
-        }); 
-        return returnSongs;
+    //const doneSearch = new Promise((res, rej) => {
+      //Search for the first 10 songs based on the string
+        SpotifyCred.spotifyApi.searchTracks(str,{ limit: 10 }).then(function(data) {
+          let songs = data.body.tracks.items;
+          let returnSongs = [];
+
+          //For each item, assign the relavent components to curr and then push into returnSongs
+          songs.forEach(item => {
+              let curr = new songStruct;
+              curr.title = item.name;
+
+              let artistArr = [];
+              item.artists.forEach(item2 => { //Get every Artist
+                artistArr.push(item2.name)
+              });
+
+              curr.artists = artistArr;
+              curr.album = item.album.name;
+              curr.id = item.id;
+              
+              //let images = [];
+              //item.images.forEach(item3 => { //Get every image
+               // images.push(item3)
+              //});
+
+              //curr.albumArt = images;
+              //console.log(item.images[0].url);
+
+              returnSongs.push(curr);
+          }); 
+          //console.log(returnSongs);
+          //res();
+          return returnSongs;
+        //});    
       }, function(err) {
           console.error(err);
       });
@@ -57,7 +71,7 @@ class SpotifyCred{
 
   
 
-  static refresh(){
+  static refresh(){ //Called periodically to refresh the token
      
       SpotifyCred.spotifyApi.refreshAccessToken().then(
           function(data) {
@@ -78,12 +92,14 @@ class SpotifyCred{
       Database.initServer();
       Database.requestCredentials();
       // TODO Daniel needs to make Database.getData() return a promise to avoid the setTimeout() workaround below
+
       Database.getData("SpotifySecret/", (snapshot) => { 
           secret = snapshot.val();
       });
 
       const successfulLogin = new Promise((res, rej) => {
         setTimeout(() => {
+          //Initialize the spotifyApi object
           SpotifyCred.spotifyApi = new SpotifyWebApi({
               redirectUri:"http://localhost:8080",
               clientId: "2bab0f940a6547628f9beb01de54e982",
@@ -92,6 +108,7 @@ class SpotifyCred{
           SpotifyCred.spotifyApi.authorizationCodeGrant(code).then(
               function(data) {
                 
+                //Store the relavent data
                 SpotifyCred.expiresIn = data.body['expires_in'];
                 SpotifyCred.accessT = data.body['access_token'];
                 SpotifyCred.refreshT = data.body['refresh_token'];
@@ -114,5 +131,6 @@ class SpotifyCred{
 
 
 module.exports = {
-    SpotifyCred
+    SpotifyCred,
+    songStruct
 }
