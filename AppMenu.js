@@ -166,6 +166,13 @@ class AppMenu extends Menu {
             }
           },
           {
+            label: "leaveSession",
+            click: () => {
+                Session.leaveSession();
+                console.log("Left the session");
+            }
+          },
+          {
             label: "queueSong",
             click: () => {
                 let song = new songStruct;
@@ -193,7 +200,8 @@ class AppMenu extends Menu {
           {
             label: "loginSpotify()",
             click: () => {
-              SpotifyLogin.login();
+              let code =
+              SpotifyCred.login(code);
             }
           }
         ],

@@ -24,16 +24,20 @@ class Session {
 
     static queue = [];
     static sId = "";
+    static listenerFunc = null; //the listener function to the server id data
 
 
     static joinSession(id){
         Session.sId = id;
         Database.initServer();
         Database.requestCredentials();
-        Database.getData("Server/" + id + "/queue", (snapshot) => { 
-            if(snapshot.exists())
+
+        //start listening to the server
+        Session.listenerFunc = Database.getData("Server/" + id + "/queue", (snapshot) => {
+            if(snapshot.exists()) {
                 Session.queue = snapshot.val();
-            else{
+                console.log("data updated");
+            } else {
                 console.log("Server does not exist");
             }
             //snapshot.forEach(item => {
@@ -43,7 +47,6 @@ class Session {
            
             //console.log(Session.queue);
         });
-    
     }
 
     static getId() {
@@ -51,9 +54,9 @@ class Session {
     }
     
     static leaveSession(){
-        Session.queue = [];
+        Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening
+        Session.queue = []; //reset queues and id
         Session.sId = "";
-        //Add code to disable current listeners
     }
 
     static queueSong(song){
@@ -104,6 +107,7 @@ class Session {
 
     static deleteSession() {
         Database.deleteData("Server/" + Session.sId);
+        Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
         Session.sId = "";
     }
 }
