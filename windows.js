@@ -1,6 +1,7 @@
 const { app, BrowserWindow } = require('electron')
 const main = require("./main.js")
 const {SpotifyCred} = require("./api/spotify.js");
+const {songStruct} = require("./api/spotify.js")
 // THIS FILE CONTAINS WINDOW INFORMATION FOR HOST PANEL, VOLUME, QUEUE, AND SEARCH CONTROLS.
 
 // Keep a reference for dev mode
@@ -249,18 +250,16 @@ function createHostPanelWindow(mainWindow, monitorWidth) {
       if (spotify.webContents.getURL().substr(0, 16) === "http://localhost") {
         const result = spotify.webContents.getURL();
         const code = new URL(result).searchParams.get("code");
-        //^ this should give the code but window isn't defined even tho as you type window it says the correct thing
-        // SpotifyCred.login(code);
-
+        
         // wait for spotify api secret to be received from DB then login
         
-        //SpotifyCred.login(code).then(() => {
-            //SpotifyCred.search("Bury");
-          //setTimeout(() => {
-          //  console.log("Testing the songs after the search:");
-          //  console.log(songs);
-          //}, 4000);
-        //})
+//        SpotifyCred.login(code).then(() => {
+//            let songs = SpotifyCred.search("Bury");
+//            setTimeout(() => {
+//              console.log("Testing the songs after the search:");
+//              console.log(songs);
+//            }, 4000);
+//        })
 
         console.log("Successful Spotify Login");
         main.authSpotify();
