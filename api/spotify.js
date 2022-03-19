@@ -85,12 +85,43 @@ class SpotifyCred{
   static login(code){
       Database.initServer();
       Database.requestCredentials();
-      // TODO Daniel needs to make Database.getData() return a promise to avoid the setTimeout() workaround below
 
-      Database.getData("SpotifySecret/", (snapshot) => { 
-          secret = snapshot.val();
+      const successfulLogin = Database.getDataOnce("SpotifySecret/").then((snapshot) => 
+      {
+
+        if (!snapshot.exists()) {
+          console.log("Spotify Login Failed: Spotify Secret Not Found!"); //secret not on database, this should never occur 
+        } else {
+          
+          secret = snapshot.val(); //data retrieved
+
+          //Initialize the spotifyApi object
+          SpotifyCred.spotifyApi = new SpotifyWebApi({
+            redirectUri:"http://localhost:8080",
+            clientId: "2bab0f940a6547628f9beb01de54e982",
+            clientSecret: secret
+          });
+          SpotifyCred.spotifyApi.authorizationCodeGrant(code).then(
+              function(data) {
+                
+                //Store the relavent data
+                SpotifyCred.expiresIn = data.body['expires_in'];
+                SpotifyCred.accessT = data.body['access_token'];
+                SpotifyCred.refreshT = data.body['refresh_token'];
+              
+                // Set the access token on the API object to use it in later calls
+                SpotifyCred.spotifyApi.setAccessToken(data.body['access_token']);
+                SpotifyCred.spotifyApi.setRefreshToken(data.body['refresh_token']);
+              },
+              function(err) { console.log('Spotify Login: Something went wrong!', err); }
+          );
+        }
+      }).catch((error) => {
+        console.log("Spotify Login Failed: Database Not Reached!"); //read from database failed
       });
+      return successfulLogin;
 
+      /* I've left this here in case it is needed, doubtful
       const successfulLogin = new Promise((res, rej) => {
         setTimeout(() => {
           //Initialize the spotifyApi object
@@ -118,8 +149,8 @@ class SpotifyCred{
               }
             );
           }, 2000);
-      });        
-      return successfulLogin;
+      });
+      */
   }
 }
 

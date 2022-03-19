@@ -24,27 +24,39 @@ class Session {
 
     static queue = [];
     static sId = "";
+    static listenerFunc = null; //the listener function to the server id data
 
 
     static joinSession(id){
         Session.sId = id;
         Database.initServer();
         Database.requestCredentials();
-        Database.getData("Server/" + id + "/queue", (snapshot) => { 
-            
-            
+
+        //start listening to the server
+        Session.listenerFunc = Database.getData("Server/" + id + "/queue", (snapshot) => {
+            if(snapshot.exists()) {
+                Session.queue = snapshot.val();
+                console.log("data updated");
+            } else {
+                console.log("Server does not exist");
+            }
             //snapshot.forEach(item => {
                 //let element = new songStruct;
                 //element.title = 
             //});
-            Session.queue = snapshot.val();
+           
             //console.log(Session.queue);
         });
-    
     }
 
     static getId() {
         return Session.sId;
+    }
+    
+    static leaveSession(){
+        Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening
+        Session.queue = []; //reset queues and id
+        Session.sId = "";
     }
 
     static queueSong(song){
@@ -95,6 +107,7 @@ class Session {
 
     static deleteSession() {
         Database.deleteData("Server/" + Session.sId);
+        Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
         Session.sId = "";
     }
 }
