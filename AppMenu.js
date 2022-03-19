@@ -4,7 +4,7 @@ const SpotifyLogin =  require("./api/spotify.js");
 const {Database} = require("./api/firebase.js");
 const googleLogin = require("./api/google.js");
 const {Session} = require("./session.js");
-const {songStruct} = require("./api/spotify.js")
+const {songStruct, SpotifyCred} = require("./api/spotify.js")
 
 const isMac = process.platform === "darwin";
 
@@ -92,6 +92,24 @@ class AppMenu extends Menu {
             }
           },
           {
+            label: "getDataOnce()", //CALL THIS BEFORE REQUESTING/MODIFYING DATA FROM FIREBASE
+            click: () => {
+              Database.getDataOnce("userData/user1123581321345589").then((snapshot) => 
+              {
+
+                if (snapshot.exists()) {
+                  console.log(snapshot.val()); //data retrieved
+                } else { //found on database but field is nonexistent
+                  console.log("No data available");
+                }
+
+              }).catch((error) => {
+                console.log("Data not found");
+              });
+            }
+          },
+
+          {
             label: "DatabaseTestCreate()",
             click: () => {
               Database.createData("userData/user1123581321345589",
@@ -145,6 +163,12 @@ class AppMenu extends Menu {
                 song.title = "Jesse diss track";
                 song.id = "test";
                 Session.queueSong(song);
+            }
+          },
+          {
+            label: "searchSongs",
+            click: () => {
+                SpotifyCred.search("spring");
             }
           },
           {

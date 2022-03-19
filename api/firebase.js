@@ -50,6 +50,11 @@ class Database
     return -1;
   }
 
+  //get data via a promise
+  static getDataOnce = (location, listenFunc) => {
+    return get(ref(Database.db, location));
+  }
+
   //set, location, and data needed, see AppMenu.js for usage example
   static createData = (location, data) => {
     //console.log(data);
