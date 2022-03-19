@@ -92,7 +92,7 @@ class AppMenu extends Menu {
             }
           },
           {
-            label: "getDataOnce()", //CALL THIS BEFORE REQUESTING/MODIFYING DATA FROM FIREBASE
+            label: "DatabaseTestReadOnce()", //CALL THIS BEFORE REQUESTING/MODIFYING DATA FROM FIREBASE
             click: () => {
               Database.getDataOnce("userData/user1123581321345589").then((snapshot) => 
               {
@@ -126,6 +126,18 @@ class AppMenu extends Menu {
             label: "DatabaseTestRead()",
             click: () => {
               Database.getData("userData/user1123581321345589", (snapshot) => { console.log(snapshot.val()); });
+            }
+          },
+          {
+            label: "DatabaseTestRemoveListener()",
+            click: () => {
+              Database.removeAllListeners("userData/user1123581321345589");
+            }
+          },
+          {
+            label: "DatabaseTestDelete()",
+            click: () => {
+              Database.createData("userData/user1123581321345589", {});
             }
           },
           {
@@ -183,14 +195,7 @@ class AppMenu extends Menu {
             click: () => {
               SpotifyLogin.login();
             }
-          },
-          {
-            label: "DatabaseTestDelete()",
-            click: () => {
-              Database.createData("userData/user1123581321345589", {});
-            }
           }
-
         ],
       });
     }
