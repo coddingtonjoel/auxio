@@ -1,4 +1,5 @@
 const {Database} = require("./api/firebase.js");
+const {songStruct} = require("./api/spotify.js")
 
 
 function generateSesId(){
@@ -12,42 +13,82 @@ function generateSesId(){
     return result;
 }
 
+let empty =  new songStruct;
+empty.title = "";
+empty.artist = [""];
+empty.album = "";
+empty.albumArt = "";
+empty.id = "";
+
 class Session{
 
     
-    queue = ["test","test2"];
-    sId = "";
+    static queue = [];
+    static sId = "";
+
 
     static joinSession(id){
         Session.sId = id;
         Database.initServer();
         Database.requestCredentials();
-        Database.getData("Server/" + id, (snapshot) => { 
+        Database.getData("Server/" + id + "/queue", (snapshot) => { 
+            
+            
+            //snapshot.forEach(item => {
+                //let element = new songStruct;
+                //element.title = 
+            //});
             Session.queue = snapshot.val();
+            //console.log(Session.queue);
         });
     
-    }
-
-    static test(){
-        return Session.queue;
     }
 
     static getId(){
         return Session.sId;
     }
 
-    static queueSong(songId){
-        // Queue not currently working
-        Session.queue.push(songId);
+    static queueSong(song){
+        if (Session.queue[0].album == ""){ //If the first song is a filler song, clear it and then push the new song on top
+            Session.queue = [];
+            Session.queue.push(song);
+            Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+        }
+        else { //If there are already songs in queue
+            Session.queue.push(song);
+            Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+        }
+    }
+
+    static clearQueue(){ //Called by the host to clear the queue
+        Session.queue = [];
+        Session.queue.push(empty);
         Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+    }
+
+
+    static deleteSong(songId){ //Delete a specific song from queue
+        for (let i = 0; i < Session.queue.length; i++) {
+            if (Session.queue[i].id == songId){
+                Session.queue.splice(i, 1); //Delete the element at index i
+                if(Session.queue.length == 0){ //If the queue is now empty, replace it with an empty queue
+                    Session.queue.push(empty)
+                    Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+                } else { //Write the new queue without the element to the server
+                    Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+                }
+                break;
+            }
+        }
     }
 
     static createSession(){
         Session.sId = generateSesId();
         Database.initServer();
         Database.requestCredentials();
-        //let tQueue = Session.queue;
-        Database.createData("Server/" + Session.sId, { "queue" : ["test2"]});
+        Session.queue.push(empty);
+        //console.log(Session.queue);
+        Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
         //Database.createData("Server/" + Session.sId, { "queue" : ["test2"]});
         //Send id to firebase
 
