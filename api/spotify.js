@@ -49,14 +49,8 @@ class SpotifyCred{
               curr.artists = artistArr;
               curr.album = item.album.name;
               curr.id = item.id;
-              
-              //let images = [];
-              //item.images.forEach(item3 => { //Get every image
-               // images.push(item3)
-              //});
-
-              //curr.albumArt = images;
-              //console.log(item.images[0].url);
+ 
+              curr.albumArt = item.album.images[0].url;
 
               returnSongs.push(curr);
           }); 
