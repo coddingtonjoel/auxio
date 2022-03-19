@@ -13,16 +13,15 @@ function generateSesId(){
     return result;
 }
 
-let empty =  new songStruct;
+let empty = new songStruct;
 empty.title = "";
 empty.artist = [""];
 empty.album = "";
 empty.albumArt = "";
 empty.id = "";
 
-class Session{
+class Session {
 
-    
     static queue = [];
     static sId = "";
 
@@ -44,7 +43,7 @@ class Session{
     
     }
 
-    static getId(){
+    static getId() {
         return Session.sId;
     }
 
@@ -94,7 +93,7 @@ class Session{
 
     }
 
-    static deleteSession(){
+    static deleteSession() {
         Database.deleteData("Server/" + Session.sId);
         Session.sId = "";
     }
