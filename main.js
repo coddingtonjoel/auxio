@@ -3,7 +3,7 @@ const { app, BrowserWindow, ipcMain, screen } = require('electron')
 const path = require('path')
 const url = require('url')
 const AppMenu = require("./AppMenu");
-const session = require("./session.js");
+const {Session} = require("./session.js");
 const WindowsModule = require("./windows");
 const {GoogleCred} = require("./api/google.js");
 
@@ -117,6 +117,20 @@ app.on('ready', () => {
   // resize mainWindow to welcome/connect size
   ipcMain.on("windowSize:welcome", () => {
     mainWindow.setSize(900, 600, true);
+  })
+
+  ipcMain.on("createSession", () => {
+      Session.createSession();
+  })
+
+  ipcMain.on("joinSession", (e, data) => {
+    let exists = Session.joinSession(data.id);
+    if(!exists){
+      mainWindow.webContents.send("joinSession:failure");
+    }
+    else{
+      mainWindow.webContents.send("joinSession:success");
+    }
   })
 
   ipcMain.on("login:googleSuccess", (e, cred) => {
