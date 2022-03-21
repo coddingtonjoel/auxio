@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import styled, { useTheme } from "styled-components";
 import { ipcRenderer } from "electron";
 import roomPreferences from "../assets/icons/room-preferences.svg";
@@ -12,6 +12,7 @@ import pauseIcon from "../assets/icons/pause.svg";
 import prevIcon from "../assets/icons/previous.svg";
 import nextIcon from "../assets/icons/skip.svg";
 import Slider from "@mui/material/Slider";
+import { SessionContext } from "../SessionContext";
 
 // turn song from seconds into minutes
 const formatDuration = (value) => {
@@ -22,9 +23,15 @@ const formatDuration = (value) => {
 
 const Player = () => {
   const theme = useTheme();
+  const [ID, setID] = useContext(SessionContext);
 
   useEffect(() => {
     ipcRenderer.send("windowSize:player");
+    ipcRenderer.send("getID");
+
+    ipcRenderer.on("getID:return", (e, data) => {
+      setID(data.id);
+    })
   }, []);
 
   let isHost = true;
@@ -71,7 +78,7 @@ const Player = () => {
     
   return (
     <Wrapper>
-      <span className="session-id">SES-SSION-CODE</span>
+      <span className="session-id">{ID}</span>
       <div className="control-buttons">
         {/* host panel is only available as a session host */}
         {isHost ? (
