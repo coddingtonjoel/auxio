@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 const {initializeApp} = require("firebase/app");
 const {getAuth} = require("firebase/auth");
-const {getDatabase, ref, set, onValue, get} = require("firebase/database");
+const {getDatabase, ref, set, onValue, get, off} = require("firebase/database");
 const { WatchIgnorePlugin } = require("webpack");
 const {GoogleCred} = require("./google.js");
 //const { getAnalytics } = require("firebase/analytics");
@@ -50,6 +50,11 @@ class Database
     return -1;
   }
 
+  //get data via a promise
+  static getDataOnce = (location, listenFunc) => {
+    return get(ref(Database.db, location));
+  }
+
   //set, location, and data needed, see AppMenu.js for usage example
   static createData = (location, data) => {
     //console.log(data);
@@ -59,6 +64,16 @@ class Database
   //actually just a set data to null in the given location, this will remove the piece of data (and label).
   static deleteData = (location) => {
     return set(ref(Database.db, location), null);
+  }
+
+  //remove a specified listener from a location
+  static removeListener = (location, listener) => {
+    off(ref(Database.db, location), listener);
+  }
+
+  //remove all listeners from a location (includes other users listeners)
+  static removeAllListeners = (location) => {
+    off(ref(Database.db, location));
   }
 }
 
