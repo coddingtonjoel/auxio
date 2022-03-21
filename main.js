@@ -120,12 +120,13 @@ app.on('ready', () => {
   })
 
   ipcMain.on("createSession", () => {
-      Session.createSession();
+      const id = Session.createSession();
+      mainWindow.webContents.send("createSession:success", {id});
   })
 
   ipcMain.on("getID", () => {
     let id = Session.getId();
-    mainWindow.webContents.send("getId:return", {id});
+    mainWindow.webContents.send("getID:return", {id});
   })
 
   ipcMain.on("joinSession", (e, data) => {

@@ -101,6 +101,7 @@ class Session {
         Session.queue.push(empty);
         //console.log(Session.queue);
         Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+        return Session.sId;
         //Database.createData("Server/" + Session.sId, { "queue" : ["test2"]});
         //Send id to firebase
 

@@ -1,35 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from "react-router-dom";
 import AuthCode from 'react-auth-code-input';
+import { ipcRenderer } from 'electron';
+import { SessionContext } from '../SessionContext';
 
 const Join = () => {
-  const [id, setId] = useState("");
+  const [inputID, setInputID] = useState("");
+  const [error, setError] = useState(null);
+
+  // session id info for player usage
+  const [ID, setID] = useContext(SessionContext);
   const navigate = useNavigate();
 
   // automatically focus the first textbox of the input
   useEffect(() => {
     document.getElementsByClassName("id-char")[0].focus();
+
+    ipcRenderer.on("joinSession:success", () => {
+      setID(inputID);
+      navigate("/player");
+    })
+
+    ipcRenderer.on("joinSession:failure", () => {
+      setError(
+        <p className="error">Invalid Session ID</p>
+      );
+      setTimeout(() => {
+        setError(null);
+      }, 4000)
+    })
   }, []);
 
   const handleChange = (val) => {
     val = val.toUpperCase();
     console.log(val);
-    setId(val);
+    setInputID(val);
   }
 
   const handleJoin = () => {
-    if (id.length === 11) {
-      // start a loader
-      // send IPC message to backend
-      // have backend check the session ID against DB to make sure it's valid
-      // if it is, get the requested info from the backend with session information
-      // stop loader
-      // join session
-      navigate("/player");
-    }
-    else {
-
+    if (inputID.length === 10) {
+      ipcRenderer.send("joinSession", {inputID});
     }
   }
 
@@ -38,12 +49,13 @@ const Join = () => {
       <h2>Enter a Valid Session ID:</h2>
         <div className="id-container">
           <AuthCode
-              length={11}
+              length={10}
               onChange={handleChange}
               allowedCharacters={"alphanumeric"}
               inputClassName="id-char"
             />
         </div>
+        {error}
       <button onClick={handleJoin}>Join Session</button>
     </Wrapper>
   )
@@ -75,7 +87,7 @@ const Wrapper = styled.div`
 
   /* put gaps between the sections of the session id */
   .id-char:nth-child(3),
-  .id-char:nth-child(7) {
+  .id-char:nth-child(6) {
     margin-right: 50px !important;
   }
 
@@ -113,6 +125,15 @@ const Wrapper = styled.div`
 
   button:active {
     background-color: ${props => props.theme.primaryActive};
+  }
+
+  .error {
+    position: absolute;
+    color: red;
+    text-align: center;
+    font-weight: 700;
+    width: 100vw;
+    transform: translateY(-38px);
   }
 `;
 
