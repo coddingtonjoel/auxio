@@ -123,6 +123,11 @@ app.on('ready', () => {
       Session.createSession();
   })
 
+  ipcMain.on("getID", () => {
+    let id = Session.getId();
+    mainWindow.webContents.send("getId:return", {id});
+  })
+
   ipcMain.on("joinSession", (e, data) => {
     let exists = Session.joinSession(data.id);
     if(!exists){
