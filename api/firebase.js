@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
+const { request } = require("express");
 const {initializeApp} = require("firebase/app");
-const {getAuth} = require("firebase/auth");
+const {getAuth, signInWithCredential, GoogleAuthProvider} = require("firebase/auth");
 const {getDatabase, ref, set, onValue, get, off} = require("firebase/database");
 const { WatchIgnorePlugin } = require("webpack");
 const {GoogleCred} = require("./google.js");
@@ -37,6 +38,19 @@ class Database
     Database.app = initializeApp(firebaseConfig);
     Database.authentification = getAuth(Database.app);
     Database.db = getDatabase(Database.app);
+
+    if(Database.userCredentials == null) //only sign in if the credentials aren't set
+      this.requestCredentials(); //get credentials
+
+    //get creds in desired format
+    let googleCred = GoogleAuthProvider.credential(Database.userCredentials.tokenId, Database.userCredentials.accessToken);
+
+    //sign in and authenticate
+    signInWithCredential(Database.authentification, googleCred).catch((error) => {
+      console.log("Authentification failed!");
+      console.log(error.code);
+      console.log(error.message);
+    });
   }
 
   static requestCredentials = () => {
