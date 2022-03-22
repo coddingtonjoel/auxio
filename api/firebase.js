@@ -46,7 +46,9 @@ class Database
     let googleCred = GoogleAuthProvider.credential(Database.userCredentials.tokenId, Database.userCredentials.accessToken);
 
     //sign in and authenticate
-    signInWithCredential(Database.authentification, googleCred).catch((error) => {
+    signInWithCredential(Database.authentification, googleCred)
+      .then((e) => {console.log("Firebase Authentification Success")})
+      .catch((error) => {
       console.log("Authentification failed!");
       console.log(error.code);
       console.log(error.message);
