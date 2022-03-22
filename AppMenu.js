@@ -196,13 +196,6 @@ class AppMenu extends Menu {
                 Session.clearQueue();  
               //Session.deleteSong("test");
             }
-          },
-          {
-            label: "loginSpotify()",
-            click: () => {
-              let code =
-              SpotifyCred.login(code);
-            }
           }
         ],
       });
