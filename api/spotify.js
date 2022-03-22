@@ -54,7 +54,7 @@ class SpotifyCred{
 
               returnSongs.push(curr);
           }); 
-          //console.log(returnSongs);
+          console.log(returnSongs);
           //res();
           return returnSongs;
         //});    
