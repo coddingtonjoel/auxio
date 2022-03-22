@@ -6,6 +6,7 @@ const AppMenu = require("./AppMenu");
 const {Session} = require("./session.js");
 const WindowsModule = require("./windows");
 const {GoogleCred} = require("./api/google.js");
+const {Database} = require("./api/firebase.js");
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -142,6 +143,7 @@ app.on('ready', () => {
   ipcMain.on("login:googleSuccess", (e, cred) => {
     console.log("Google Login Success");
     GoogleCred.setCredentials(cred);
+    Database.initServer();
     //console.log(GoogleCred.getCredentials()); //for debugging or seeing attribute names
   })
   ipcMain.on("login:googleFailure", (e, mess) => {

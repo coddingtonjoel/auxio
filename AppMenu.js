@@ -2,7 +2,6 @@ const { Menu, BrowserWindow } = require("electron");
 const WindowsModule = require("./windows");
 const SpotifyLogin =  require("./api/spotify.js");
 const {Database} = require("./api/firebase.js");
-const googleLogin = require("./api/google.js");
 const {Session} = require("./session.js");
 const {songStruct, SpotifyCred} = require("./api/spotify.js")
 
