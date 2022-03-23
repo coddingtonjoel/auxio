@@ -46,10 +46,10 @@ class SpotifyCred{
               });
 
               curr.artists = artistArr;
-              curr.album = item.album.name;
+              curr.album = item.album.name; 
               curr.id = item.id;
  
-              curr.albumArt = item.album.images[0].url;
+              curr.albumArt = [item.album.images[0].url,item.album.images[2].url];
               returnSongs.push(curr);
           }); 
           res(returnSongs);
