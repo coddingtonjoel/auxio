@@ -178,15 +178,9 @@ class AppMenu extends Menu {
             }
           },
           {
-            label: "queueSong",
+            label: "getHostInfo",
             click: () => {
-                let song = new songStruct;
-                song.artist = ["Daniel March"];
-                song.album = "Rock Enthusiast"
-                song.albumArt = "";
-                song.title = "Jesse diss track";
-                song.id = "test";
-                Session.queueSong(song);
+                SpotifyCred.getHostPlaylists();
             }
           },
           {

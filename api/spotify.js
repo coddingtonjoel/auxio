@@ -15,6 +15,11 @@ class songStruct{
   static title;
 }
 
+class playlistStruct{
+  static name;
+  static albumArt;
+  static id;
+}
 
 class SpotifyCred{
   
@@ -60,6 +65,26 @@ class SpotifyCred{
   }
 
   
+
+  static getHostPlaylists(){
+    const completeList = new Promise((res, rej) => {
+      SpotifyCred.spotifyApi.getMe().then(function(data) {
+        SpotifyCred.spotifyApi.getUserPlaylists(data.body.id).then(function(data) {
+          let playlists = [];
+          data.body.items.forEach(item => {
+            let curr = new playlistStruct;
+            curr.name = item.name;
+            curr.id = item.id;
+            curr.albumArt = item.images[2].url;
+            playlists.push(curr);
+          }); 
+          res(playlists);
+          }).catch(err => rej(err));
+      }).catch(err => rej(err));
+    });
+    return completeList;
+  }
+
 
   static refresh(){ //Called periodically to refresh the token
      
