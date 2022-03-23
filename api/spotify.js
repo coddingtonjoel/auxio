@@ -176,5 +176,6 @@ class SpotifyCred{
 
 module.exports = {
     SpotifyCred,
-    songStruct
+    songStruct,
+    playlistStruct
 }
