@@ -27,12 +27,11 @@ class Session {
     static listenerFunc = null; //the listener function to the server id data
     static host = false;
 
-    static joinSession(id){
-        Session.sId = id;
-
+    static joinSession(id){  
         //start listening to the server
         Session.listenerFunc = Database.getData("Server/" + id + "/queue", (snapshot) => {
             if(snapshot.exists()) {
+                Session.sId = id;
                 Session.queue = snapshot.val();
                 return true;
             } else {
@@ -48,12 +47,20 @@ class Session {
         });
     }
 
+
+    static changeQueue(newQueue){
+        //change the current queue to the new input
+        Session.queue = newQueue;
+        Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+    }
+
     static getId() {
         return Session.sId;
     }
     
     static leaveSession(){
         if(!Session.host){
+            Session.host = false;
             Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening
             Session.queue = []; //reset queues and id
             Session.sId = "";
@@ -112,7 +119,7 @@ class Session {
     }
 
     static deleteSession() {
-        if(Session.isHost){
+        if(Session.host && Session.sId != ""){
             Database.deleteData("Server/" + Session.sId);
             Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
             Session.sId = "";
