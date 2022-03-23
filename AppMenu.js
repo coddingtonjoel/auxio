@@ -12,13 +12,19 @@ class AppMenu extends Menu {
   constructor(isDev, win) {
     super();
 
-    let template = [];
+    let template = [
+      {
+        role: "editMenu",
+      }
+    ];
 
     if (isMac) {
       template.unshift({
         role: "appMenu",
       });
     }
+
+    
 
     template.push({
       label: "Preferences",

@@ -68,7 +68,7 @@ const Welcome = () => {
                         cookiePolicy={'single_host_origin'}
                     />
 
-                    <a draggable={false} href="#" onClick={handleSpotifyLogin} className={spotifyAuth ? "disabled" : ""}>
+                    <a draggable={false} href="#" onClick={handleSpotifyLogin} className={(!googleAuth && !spotifyAuth) || spotifyAuth ? "disabled" : ""}>
                         <span>2.</span>
                         <span>Sign into Spotify <img src={openin} alt="open in"/></span>
                         <Tooltip placement="left" title={spotifyAuth ? "Logged In" : "Awaiting Login"}>

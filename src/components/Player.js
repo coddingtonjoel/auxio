@@ -4,7 +4,7 @@ import { ipcRenderer } from "electron";
 import roomPreferences from "../assets/icons/room-preferences.svg";
 import queueIcon from "../assets/icons/queue.svg";
 import volumeIcon from "../assets/icons/volume-up.svg";
-import searchIcon from "../assets/icons/search.svg";
+import searchIcon from "../assets/icons/searchWhite.svg";
 import albumArtPlaceholder from "../assets/images/album-art-placeholder.png";
 import spotifyIcon from "../assets/icons/spotify.svg";
 import playIcon from "../assets/icons/play.svg";

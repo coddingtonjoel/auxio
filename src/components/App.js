@@ -80,6 +80,7 @@ function App() {
         <CSSTransition key={location.key} classNames="fade" timeout={300}>
           <Routes key={location}>
             <Route exact path="/" element={<Welcome />} />
+            {/* <Route exact path="/" element={<Search />} /> */}
             <Route exact path="/connect" element={<Connect />} />
             <Route exact path="/player" element={<Player />} />
             <Route exact path="/join" element={<Join />} />

@@ -12,7 +12,7 @@ export const lightTheme = {
     playlistTableBorder: "#d7d7d7",
     hostPanelButtons: "#322f3d",
     volumeSearchQueueBkg: "#59405c",
-    searchQueueItemBkg: "#262626",
+    searchQueueItemBkg: "#e7e7e7",
     boxShadow: "0 0.4rem 0.8rem 0 rgba(0, 0, 0, 0.15), 0 0.6rem 2rem 0 rgba(0, 0, 0, 0.15)"
 };
 

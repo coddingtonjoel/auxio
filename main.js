@@ -3,10 +3,11 @@ const { app, BrowserWindow, ipcMain, screen } = require('electron')
 const path = require('path')
 const url = require('url')
 const AppMenu = require("./AppMenu");
-const {Session} = require("./session.js");
+const { Session } = require("./session.js");
 const WindowsModule = require("./windows");
 const {GoogleCred} = require("./api/google.js");
 const {Database} = require("./api/firebase.js");
+const {SpotifyCred} = require("./api/spotify");
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -36,10 +37,12 @@ if (process.platform === 'win32') {
 function createMainWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
+    // width: 450,
+    // height: 600,
     width: 900,
     height: 600,
     show: false,
-    resizable: false,
+    // resizable: false,
     icon: `${__dirname}/src/assets/images/logo.png`,
     webPreferences: {
       nodeIntegration: true,
@@ -183,6 +186,16 @@ app.on('ready', () => {
 
   ipcMain.on("open:hostpanel", () => {
     WindowsModule.createHostPanelWindow(mainWindow, monitorWidth);
+  })
+
+  ipcMain.on("search", (e, data) => {
+    SpotifyCred.search(data.query).then((res) => {
+      e.sender.send("search:res", {res})
+    });
+  })
+
+  ipcMain.on("queue", (e, data) => {
+    Session.queueSong(data.song);
   })
 })
 

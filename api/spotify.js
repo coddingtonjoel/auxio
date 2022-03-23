@@ -28,11 +28,10 @@ class SpotifyCred{
     return SpotifyCred.accessT;
   }
 
-
   static search(str){
-    //const doneSearch = new Promise((res, rej) => {
-      //Search for the first 10 songs based on the string
-        SpotifyCred.spotifyApi.searchTracks(str,{ limit: 10 }).then(function(data) {
+    const completeList = new Promise((res, rej) => {
+        //Search for the first 10 songs based on the string
+        SpotifyCred.spotifyApi.searchTracks(str,{ limit: 8 }).then(function(data) {
           let songs = data.body.tracks.items;
           let returnSongs = [];
 
@@ -51,16 +50,13 @@ class SpotifyCred{
               curr.id = item.id;
  
               curr.albumArt = item.album.images[0].url;
-
               returnSongs.push(curr);
           }); 
-          console.log(returnSongs);
-          //res();
-          return returnSongs;
-        //});    
-      }, function(err) {
-          console.error(err);
-      });
+          res(returnSongs);
+      }).catch(err => rej(err));
+    });
+
+    return completeList;
   }
 
   
