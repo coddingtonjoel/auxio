@@ -20,6 +20,7 @@ const Welcome = () => {
     const notifyGoogleSignInSuccess = (response) => {
         setGoogleAuth(true)
         ipcRenderer.send("login:googleSuccess", response);
+        handleSpotifyLogin(); //attempt spotify login when google is logged in.
     }
     const notifyGoogleSignInFailure = (response) => {
         ipcRenderer.send("login:googleFailure", response);
