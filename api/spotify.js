@@ -68,10 +68,10 @@ class SpotifyCred{
 
   static getHostPlaylists(){
     const completeList = new Promise((res, rej) => {
-      SpotifyCred.spotifyApi.getMe().then(function(data) {
-        SpotifyCred.spotifyApi.getUserPlaylists(data.body.id).then(function(data) {
+      SpotifyCred.spotifyApi.getMe().then(function(data) { //Get the current users id
+        SpotifyCred.spotifyApi.getUserPlaylists(data.body.id).then(function(data) { //Based on id from user,get their playlists
           let playlists = [];
-          data.body.items.forEach(item => {
+          data.body.items.forEach(item => { //For each playlist, format it into a playlist structure
             let curr = new playlistStruct;
             curr.name = item.name;
             curr.id = item.id;
