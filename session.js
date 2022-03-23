@@ -25,12 +25,10 @@ class Session {
     static queue = [];
     static sId = "";
     static listenerFunc = null; //the listener function to the server id data
-
+    static host = false;
 
     static joinSession(id){
         Session.sId = id;
-        Database.initServer();
-        Database.requestCredentials();
 
         //start listening to the server
         Session.listenerFunc = Database.getData("Server/" + id + "/queue", (snapshot) => {
@@ -55,9 +53,11 @@ class Session {
     }
     
     static leaveSession(){
-        Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening
-        Session.queue = []; //reset queues and id
-        Session.sId = "";
+        if(!Session.host){
+            Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening
+            Session.queue = []; //reset queues and id
+            Session.sId = "";
+        }
     }
 
     static queueSong(song){
@@ -94,10 +94,14 @@ class Session {
         }
     }
 
+
+    static isHost(){
+        return Session.host;
+    }
+
     static createSession(){
+        Session.host = true;
         Session.sId = generateSesId();
-        Database.initServer();
-        Database.requestCredentials();
         Session.queue.push(empty);
         //console.log(Session.queue);
         Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
@@ -108,11 +112,13 @@ class Session {
     }
 
     static deleteSession() {
-        Database.deleteData("Server/" + Session.sId);
-        Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
-        Session.sId = "";
+        if(Session.isHost){
+            Database.deleteData("Server/" + Session.sId);
+            Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
+            Session.sId = "";
+        }
     }
-}
+}   
 
 module.exports = {
     Session

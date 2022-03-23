@@ -79,8 +79,6 @@ class SpotifyCred{
 
   
   static login(code){
-      Database.initServer();
-      Database.requestCredentials();
 
       const successfulLogin = Database.getDataOnce("SpotifySecret/").then((snapshot) => 
       {
