@@ -167,8 +167,11 @@ app.on('ready', () => {
     console.log(mainWindow.theme);
   })
 
-  // window openers/closers for frontend use
+  ipcMain.on("getSpotifyToken", (e) => {
+    e.sender.send("getSpotifyToken:return", {token: SpotifyCred.accessT});
+  })
 
+  // window openers/closers for frontend use
   ipcMain.on("login:spotify", () => {
     WindowsModule.createSpotifyLoginWindow();
   })

@@ -29,10 +29,6 @@ class SpotifyCred{
   static refreshT;
   static spotifyApi;
 
-  static getToken(){
-    return SpotifyCred.accessT;
-  }
-
   static search(str){
     const completeList = new Promise((res, rej) => {
         //Search for the first 10 songs based on the string
