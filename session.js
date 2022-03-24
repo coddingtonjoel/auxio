@@ -57,8 +57,13 @@ class Session {
 
     static changeQueue(newQueue){
         //change the current queue to the new input
-        Session.queue = newQueue;
-        Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+        if(newQueue.length == 0){ //Stop empty queues from deleting the server
+            Session.clearQueue();
+        }
+        else {
+            Session.queue = newQueue;
+            Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+        }
     }
 
     static getId() {
@@ -75,7 +80,7 @@ class Session {
     }
 
     static changeCurrentSong(song) {
-        this.currentSong = song
+        this.currentSong = song;
     }
 
     static queueSong(song){
@@ -101,9 +106,9 @@ class Session {
         for (let i = 0; i < Session.queue.length; i++) {
             if (Session.queue[i].id == songId){
                 Session.queue.splice(i, 1); //Delete the element at index i
+                //console.log(Session.queue);
                 if(Session.queue.length == 0){ //If the queue is now empty, replace it with an empty queue
-                    Session.queue.push(empty)
-                    Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+                    Session.clearQueue();
                 } else { //Write the new queue without the element to the server
                     Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
                 }
