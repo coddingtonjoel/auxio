@@ -86,6 +86,7 @@ const Welcome = () => {
 
 const Wrapper = styled.div`
     font-family: "Source Sans Pro";
+    user-select: none;
 
     h1 {
         margin-top: 60px;
@@ -152,6 +153,7 @@ const Wrapper = styled.div`
     .disabled {
         opacity: 0.75;
         cursor: default;
+        pointer-events: none;
     }
 
     .disabled:hover {

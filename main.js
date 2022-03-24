@@ -42,7 +42,7 @@ function createMainWindow() {
     width: 900,
     height: 600,
     show: false,
-    // resizable: false,
+    resizable: false,
     icon: `${__dirname}/src/assets/images/logo.png`,
     webPreferences: {
       nodeIntegration: true,
@@ -194,8 +194,26 @@ app.on('ready', () => {
     });
   })
 
-  ipcMain.on("queue", (e, data) => {
+  ipcMain.on("queue:add", (e, data) => {
     Session.queueSong(data.song);
+  })
+
+  ipcMain.on("queue:fetch", (e) => {
+    // session queue can never truly be empty (due to firebase limitations), so check if the first queue item is a blank song template
+    if (Session.queue[0].id !== "") {
+      e.sender.send("queue:return", {queue: Session.queue});
+    }
+    else {
+      e.sender.send("queue:return", {queue: []});
+    }
+  })
+
+  ipcMain.on("queue:delete", (e, data) => {
+    Session.deleteSong(data.song.id);
+  })
+
+  ipcMain.on("queue:update", (e, data) => {
+    Session.changeQueue(data.queue);
   })
 })
 

@@ -40,7 +40,7 @@ const Join = () => {
 
   const handleJoin = () => {
     if (inputID.length === 10) {
-      ipcRenderer.send("joinSession", {inputID});
+      ipcRenderer.send("joinSession", {id: inputID});
     }
   }
 
