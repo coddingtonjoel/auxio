@@ -19,7 +19,7 @@ const Search = () => {
   }
 
   const handleAdd = (song) => {
-    ipcRenderer.send("queue", {song});
+    ipcRenderer.send("queue:add", {song});
   }
 
   // init ipc listener
@@ -43,20 +43,21 @@ const Search = () => {
     <Wrapper>
       <div className="search-bar">
         <Input onChange={handleSearch} placeholder="Search Spotify"/>
-        <img src={theme.style === "light" ? searchBlack : searchWhite} alt="Search"/>
+        <img draggable={false} src={theme.style === "light" ? searchBlack : searchWhite} alt="Search"/>
       </div>
       <div className="results">
         {/* If songs were found by the search */}
         {res.length !== 0 ? res.map((song) => {
           return (
             <div className="song" key={song.id}>
-              <img className="album-art" src={song.albumArt} alt={song.album}/>
+              {/* use 64x64 album art */}
+              <img draggable={false} className="album-art" src={song.albumArt[1]} alt={song.album}/>
               <div className="song-info">
                 <span>{song.title}</span>
                 <span>{song.artists[0]}</span>
               </div>
               <a onClick={() => handleAdd(song)}>
-                <img src={theme.style === "light" ? addBlack : addWhite} alt="Add"/>
+                <img draggable={false} src={theme.style === "light" ? addBlack : addWhite} alt="Add"/>
               </a>
             </div>
           )
@@ -72,12 +73,19 @@ const Search = () => {
 };
 
 const Wrapper = styled.div`
+  user-select: none;
+  
   .song {
     display: flex;
     align-items: center;
     justify-content: space-between;
     height: 58px;
     padding: 0 15px;
+    transition: 0.15s;
+
+    &:hover {
+      background-color: ${props => props.theme.searchQueueItemBkg};
+    }
 
     .song-info {
       display: flex;
@@ -109,6 +117,7 @@ const Wrapper = styled.div`
     a {
       width: 20px;
       cursor: pointer;
+      transform: translateY(3px);
     }
 
     a img {

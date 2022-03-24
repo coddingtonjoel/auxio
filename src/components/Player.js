@@ -106,6 +106,7 @@ const Player = () => {
           <div className="album-art">
             {/* show album art placeholder while fetching art from backend --> API */}
             {/* show placeholder art if albumArt === "" <-- AKA it hasn't been fetched yet. Upon IPC message, set albumArt to the image link */}
+            {/* use 640x640 album art */}
             <img
               className="art"
               draggable={false}
