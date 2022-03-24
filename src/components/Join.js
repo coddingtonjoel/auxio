@@ -39,8 +39,21 @@ const Join = () => {
   }
 
   const handleJoin = () => {
-    if (inputID.length === 10) {
-      ipcRenderer.send("joinSession", {id: inputID});
+    // add dashes to code
+    let formattedCode = inputID;
+    formattedCode = formattedCode.slice(0, 3) + "-" + formattedCode.slice(3);
+    formattedCode = formattedCode.slice(0, 7) + "-" + formattedCode.slice(7);
+
+    if (inputID.length === 13) {
+      ipcRenderer.send("joinSession", {id: formattedCode});
+    }
+    else {
+      setError(
+        <p className="error">Invalid Session ID</p>
+      );
+      setTimeout(() => {
+        setError(null);
+      }, 4000)
     }
   }
 
