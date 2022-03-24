@@ -44,7 +44,7 @@ const Join = () => {
     formattedCode = formattedCode.slice(0, 3) + "-" + formattedCode.slice(3);
     formattedCode = formattedCode.slice(0, 7) + "-" + formattedCode.slice(7);
 
-    if (inputID.length === 13) {
+    if (formattedCode.length === 12) {
       ipcRenderer.send("joinSession", {id: formattedCode});
     }
     else {
