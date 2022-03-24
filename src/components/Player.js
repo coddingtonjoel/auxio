@@ -28,7 +28,6 @@ const Player = () => {
   const [ID, setID] = useContext(SessionContext);
   const [slider, setSlider] = useState(0);
   const songLength = 200;
-  let token;
   let isHost = true;
 
   useEffect(() => {
@@ -38,9 +37,13 @@ const Player = () => {
     ipcRenderer.on("getID:return", (e, data) => {
       setID(data.id);
     })
-
-    console.log(spotifyPlayer);
   }, []);
+
+  useEffect(() => {
+    if (spotifyPlayer !== null) {
+      console.log(spotifyPlayer);
+    }
+  })
 
   // include React context for sessionDetails upon connecting to a session. Upon leaving, clear that context
   // Context is needed because Join.js and Player.js both use it and they're sibling components
@@ -139,14 +142,14 @@ const Player = () => {
                 </p>
               </div>
               <div className="song-controls">
-                <button>
+                <button disabled={spotifyPlayer === null}>
                   <img draggable={false} src={prevIcon} alt="Previous" />
                 </button>
                 {/* conditionally change icon based on isPlaying state */}
-                <button>
+                <button disabled={spotifyPlayer === null}>
                   <img draggable={false} src={playIcon} alt="Play" />
                 </button>
-                <button>
+                <button disabled={spotifyPlayer === null}>
                   <img draggable={false} src={nextIcon} alt="Next" />
                 </button>
               </div>

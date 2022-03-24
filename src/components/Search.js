@@ -6,6 +6,7 @@ import searchBlack from "../assets/icons/searchBlack.svg";
 import searchWhite from "../assets/icons/searchWhite.svg";
 import addBlack from "../assets/icons/addBlack.svg";
 import addWhite from "../assets/icons/addWhite.svg";
+import play from "../assets/icons/play.svg";
 
 const Search = () => {
   const theme = useTheme();
@@ -20,6 +21,10 @@ const Search = () => {
 
   const handleAdd = (song) => {
     ipcRenderer.send("queue:add", {song});
+  }
+
+  const handlePlay = (song) => {
+    ipcRenderer.send("currentSong:change", ({song}));
   }
 
   // init ipc listener
@@ -49,14 +54,17 @@ const Search = () => {
         {/* If songs were found by the search */}
         {res.length !== 0 ? res.map((song) => {
           return (
-            <div className="song" key={song.id}>
+            <div className="song" key={song.id} onClick={() => handlePlay(song)}>
               {/* use 64x64 album art */}
-              <img draggable={false} className="album-art" src={song.albumArt[1]} alt={song.album}/>
+              <div className="album-art-container">
+                <img className="album-art-play" src={play} alt="Play"/>
+                <img draggable={false} className="album-art" src={song.albumArt[1]} alt={song.album}/>
+              </div>
               <div className="song-info">
                 <span>{song.title}</span>
                 <span>{song.artists[0]}</span>
               </div>
-              <a onClick={() => handleAdd(song)}>
+              <a className="add" onClick={() => handleAdd(song)}>
                 <img draggable={false} src={theme.style === "light" ? addBlack : addWhite} alt="Add"/>
               </a>
             </div>
@@ -79,12 +87,21 @@ const Wrapper = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 58px;
+    height: 62px;
     padding: 0 15px;
     transition: 0.15s;
 
     &:hover {
       background-color: ${props => props.theme.searchQueueItemBkg};
+      cursor: pointer;
+    }
+
+    &:hover > .album-art-container::after {
+      opacity: 0.3;
+    }
+
+    &:hover > .album-art-container > .album-art-play {
+      opacity: 1;
     }
 
     .song-info {
@@ -109,18 +126,76 @@ const Wrapper = styled.div`
     }
 
     .album-art {
-      height: 45px;
-      width: 45px;
+      height: 48px;
+      width: 48px;
+    }
+
+    .album-art-container {
+      height: 48px;
+      width: 48px;
+      position: relative;
+    }
+
+    .album-art-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      width: 28px;
+      height: 28px;
+      transition: 0.15s;
+      z-index: 5;
+    }
+
+    .album-art-container::after {
+      content: "";
+      z-index: 2;
+      height: 48px;
+      width: 48px;
+      left: 0;
+      top: 0;
+      position: absolute;
+      background-color: #000;
+      opacity: 0;
+      transition: 0.15s;
     }
 
     /* plus button */
-    a {
-      width: 20px;
+    .add {
+      width: 25px;
       cursor: pointer;
       transform: translateY(3px);
     }
 
-    a img {
+    .add:hover::after {
+      opacity: 1;
+    }
+
+    .add:hover .album-art-container::after {
+      opacity: 0;
+    }
+
+    .add:hover .album-art-container > .album-art-play {
+      opacity: 0;
+    }
+
+    .add::after {
+      content: "";
+      z-index: -1;
+      height: 28px;
+      width: 28px;
+      left: 0;
+      top: 0;
+      position: absolute;
+      background-color: ${props => props.theme.searchQueueItemBkgHover};
+      opacity: 0;
+      transition: 0.15s;
+      border-radius: 100px;
+      transform: translate(-4px, -2px);
+    }
+
+    .add img {
       height: 20px;
       width: 20px;
     }

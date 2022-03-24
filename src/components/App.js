@@ -28,7 +28,7 @@ function App() {
   const [volume, setVolume] = useState(0.5);
 
   // TODO "Not establishing connection to Spotify". useSpotifyPlayer() is returning null. Probably something with the useCallback() for the oathtoken in App.js? 
-  const getOAuthToken = useCallback(callback => setTimeout(() => callback(token), 2000), []);
+  const getOAuthToken = useCallback(callback => callback(token), []);
 
   // prop func sent down to set new mode in both state and local storage
   const toggleMode = (newMode) => {

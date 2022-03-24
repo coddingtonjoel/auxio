@@ -19,9 +19,13 @@ empty.artist = [""];
 empty.album = "";
 empty.albumArt = "";
 empty.id = "";
+empty.length = "";
+empty.uri = "";
 
 class Session {
 
+    // current song is blank by default when a session starts
+    static currentSong = empty;
     static queue = [];
     static sId = "";
     static listenerFunc = null; //the listener function to the server id data
@@ -68,6 +72,10 @@ class Session {
             Session.queue = []; //reset queues and id
             Session.sId = "";
         }
+    }
+
+    static changeCurrentSong(song) {
+        this.currentSong = song
     }
 
     static queueSong(song){

@@ -13,6 +13,8 @@ class songStruct{
   static artist;
   static id;
   static title;
+  static length;
+  static uri;
 }
 
 class playlistStruct{
@@ -51,6 +53,8 @@ class SpotifyCred{
               curr.id = item.id;
  
               curr.albumArt = [item.album.images[0].url,item.album.images[2].url];
+              curr.uri = item.uri;
+              curr.length = Math.floor(item.duration_ms / 1000);
               returnSongs.push(curr);
           }); 
           res(returnSongs);

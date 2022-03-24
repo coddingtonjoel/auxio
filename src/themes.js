@@ -13,6 +13,7 @@ export const lightTheme = {
     hostPanelButtons: "#322f3d",
     volumeSearchQueueBkg: "#59405c",
     searchQueueItemBkg: "#e7e7e7",
+    searchQueueItemBkgHover: "#dbdbdb",
     boxShadow: "0 0.4rem 0.8rem 0 rgba(0, 0, 0, 0.15), 0 0.6rem 2rem 0 rgba(0, 0, 0, 0.15)"
 };
 
@@ -31,5 +32,6 @@ export const darkTheme = {
     hostPanelButtons: "#262626",
     volumeSearchQueueBkg: "#322f3d",
     searchQueueItemBkg: "#262626",
+    searchQueueItemBkgHover: "#2f2f2f",
     boxShadow: "0 0.4rem 0.8rem 0 rgba(0, 0, 0, 0.15), 0 0.6rem 2rem 0 rgba(0, 0, 0, 0.15)"
 };
