@@ -134,13 +134,14 @@ app.on('ready', () => {
   })
 
   ipcMain.on("joinSession", (e, data) => {
-    let exists = Session.joinSession(data.id);
-    if(!exists){
-      mainWindow.webContents.send("joinSession:failure");
-    }
-    else{
-      mainWindow.webContents.send("joinSession:success");
-    }
+    Session.joinSession(data.id).then(res => {
+      if (res) {
+        mainWindow.webContents.send("joinSession:success");
+      }
+      else {
+        mainWindow.webContents.send("joinSession:failure");
+      }
+    });
   })
 
   ipcMain.on("login:googleSuccess", (e, cred) => {

@@ -28,23 +28,26 @@ class Session {
     static host = false;
 
     static joinSession(id){  
-        //start listening to the server
-        Session.listenerFunc = Database.getData("Server/" + id + "/queue", (snapshot) => {
-            if(snapshot.exists()) {
-                Session.sId = id;
-                Session.queue = snapshot.val();
-                return true;
-            } else {
-                console.log("Server does not exist");
-                return false;
-            }
-            //snapshot.forEach(item => {
-                //let element = new songStruct;
-                //element.title = 
-            //});
-           
-            //console.log(Session.queue);
-        });
+        const sessionPromise = new Promise((res, rej) => {
+            //start listening to the server
+            Session.listenerFunc = Database.getData("Server/" + id + "/queue", (snapshot) => {
+                if(snapshot.exists()) {
+                    Session.sId = id;
+                    Session.queue = snapshot.val();
+                    res(true);
+                } else {
+                    console.log("Server does not exist");
+                    res(false);
+                }
+                //snapshot.forEach(item => {
+                    //let element = new songStruct;
+                    //element.title = 
+                //});
+               
+                //console.log(Session.queue);
+            });
+        })
+        return sessionPromise;
     }
 
 
