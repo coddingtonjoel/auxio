@@ -184,9 +184,16 @@ class AppMenu extends Menu {
             }
           },
           {
-            label: "searchSongs",
+            label: "queuePlaylist",
             click: () => {
-                SpotifyCred.search("spring");
+              SpotifyCred.getHostPlaylists().then(function(data1){
+                SpotifyCred.getSongsInPlaylist(data1[0].id).then(function(data2) {
+                  data2.forEach(item => { //Get every Artist
+                    Session.queueSong(item);
+                  });
+                });
+              });
+                
             }
           },
           {

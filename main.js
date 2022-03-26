@@ -115,7 +115,12 @@ app.on('ready', () => {
 
   // resize mainWindow to player size
   ipcMain.on("windowSize:player", () => {
-    mainWindow.setSize(650, 460, true);
+    if (process.platform === 'darwin') {
+      mainWindow.setSize(650, 460, true);
+    }
+    else {
+      mainWindow.setSize(650, 480, true);
+    }
   });
 
   // resize mainWindow to welcome/connect size
@@ -167,8 +172,11 @@ app.on('ready', () => {
     console.log(mainWindow.theme);
   })
 
-  // window openers/closers for frontend use
+  ipcMain.on("getSpotifyToken", (e) => {
+    e.sender.send("getSpotifyToken:return", {token: SpotifyCred.accessT});
+  })
 
+  // window openers/closers for frontend use
   ipcMain.on("login:spotify", () => {
     WindowsModule.createSpotifyLoginWindow();
   })
@@ -215,6 +223,10 @@ app.on('ready', () => {
 
   ipcMain.on("queue:update", (e, data) => {
     Session.changeQueue(data.queue);
+  })
+
+  ipcMain.on("currentSong:change", (e, data) => {
+    Session.changeCurrentSong(data.song);
   })
 })
 

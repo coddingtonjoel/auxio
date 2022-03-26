@@ -1,5 +1,4 @@
 var SpotifyWebApi = require('spotify-web-api-node');
-const express = require("express");
 const {Database} = require("./firebase.js");
 
 
@@ -13,6 +12,8 @@ class songStruct{
   static artist;
   static id;
   static title;
+  static length;
+  static uri;
 }
 
 class playlistStruct{
@@ -28,10 +29,6 @@ class SpotifyCred{
   static accessT;
   static refreshT;
   static spotifyApi;
-
-  static getToken(){
-    return SpotifyCred.accessT;
-  }
 
   static search(str){
     const completeList = new Promise((res, rej) => {
@@ -55,6 +52,8 @@ class SpotifyCred{
               curr.id = item.id;
  
               curr.albumArt = [item.album.images[0].url,item.album.images[2].url];
+              curr.uri = item.uri;
+              curr.length = Math.floor(item.duration_ms / 1000);
               returnSongs.push(curr);
           }); 
           res(returnSongs);
@@ -64,7 +63,38 @@ class SpotifyCred{
     return completeList;
   }
 
-  
+
+  static getSongsInPlaylist(playlist){ //return an array of all the songStructs for a playlist
+    const completeList = new Promise((res, rej) => {
+      SpotifyCred.spotifyApi.getPlaylist(playlist).then(function(data) { //same general structure as search for creating a songStruct
+        let returnSongs = [];
+        data.body.tracks.items.forEach(item => {
+          
+          let curr = new songStruct;
+          curr.title = item.track.name;
+          
+
+          let artistArr = [];
+          item.track.artists.forEach(item2 => { //Get every Artist
+            artistArr.push(item2.name)
+          });
+
+          curr.artists = artistArr;
+          curr.album = item.track.album.name; 
+          
+          curr.id = item.track.id;
+
+          curr.albumArt = [item.track.album.images[0].url,item.track.album.images[2].url]; 
+          curr.uri = item.track.uri;
+          curr.length = Math.floor(item.track.duration_ms / 1000);
+          returnSongs.push(curr);
+        });
+        res(returnSongs);
+      }).catch(err => rej(err));
+    });
+    return completeList;
+  }
+
 
   static getHostPlaylists(){
     const completeList = new Promise((res, rej) => {
@@ -139,37 +169,6 @@ class SpotifyCred{
         console.log("Spotify Login Failed: Database Not Reached!"); //read from database failed
       });
       return successfulLogin;
-
-      /* I've left this here in case it is needed, doubtful
-      const successfulLogin = new Promise((res, rej) => {
-        setTimeout(() => {
-          //Initialize the spotifyApi object
-          SpotifyCred.spotifyApi = new SpotifyWebApi({
-              redirectUri:"http://localhost:8080",
-              clientId: "2bab0f940a6547628f9beb01de54e982",
-              clientSecret: secret
-          });
-          SpotifyCred.spotifyApi.authorizationCodeGrant(code).then(
-              function(data) {
-                
-                //Store the relavent data
-                SpotifyCred.expiresIn = data.body['expires_in'];
-                SpotifyCred.accessT = data.body['access_token'];
-                SpotifyCred.refreshT = data.body['refresh_token'];
-               
-                // Set the access token on the API object to use it in later calls
-                SpotifyCred.spotifyApi.setAccessToken(data.body['access_token']);
-                SpotifyCred.spotifyApi.setRefreshToken(data.body['refresh_token']);
-                res();
-              },
-              function(err) {
-                console.log('Something went wrong!', err);
-                rej();
-              }
-            );
-          }, 2000);
-      });
-      */
   }
 }
 

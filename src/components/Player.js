@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import styled, { useTheme } from "styled-components";
 import { ipcRenderer } from "electron";
 import roomPreferences from "../assets/icons/room-preferences.svg";
@@ -13,6 +13,7 @@ import prevIcon from "../assets/icons/previous.svg";
 import nextIcon from "../assets/icons/skip.svg";
 import Slider from "@mui/material/Slider";
 import { SessionContext } from "../SessionContext";
+import { useSpotifyPlayer } from "react-spotify-web-playback-sdk";
 
 // turn song from seconds into minutes
 const formatDuration = (value) => {
@@ -23,7 +24,11 @@ const formatDuration = (value) => {
 
 const Player = () => {
   const theme = useTheme();
+  const spotifyPlayer = useSpotifyPlayer();
   const [ID, setID] = useContext(SessionContext);
+  const [slider, setSlider] = useState(0);
+  const songLength = 200;
+  let isHost = true;
 
   useEffect(() => {
     ipcRenderer.send("windowSize:player");
@@ -34,10 +39,11 @@ const Player = () => {
     })
   }, []);
 
-  let isHost = true;
-
-  const [slider, setSlider] = useState(0);
-  const songLength = 200;
+  useEffect(() => {
+    if (spotifyPlayer !== null) {
+      console.log(spotifyPlayer);
+    }
+  })
 
   // include React context for sessionDetails upon connecting to a session. Upon leaving, clear that context
   // Context is needed because Join.js and Player.js both use it and they're sibling components
@@ -101,93 +107,93 @@ const Player = () => {
         </button>
       </div>
       <div className="content">
-        {/* album art, song info, like/dislike buttons, prev/pause/next */}
-        <div className="content-upper">
-          <div className="album-art">
-            {/* show album art placeholder while fetching art from backend --> API */}
-            {/* show placeholder art if albumArt === "" <-- AKA it hasn't been fetched yet. Upon IPC message, set albumArt to the image link */}
-            {/* use 640x640 album art */}
-            <img
-              className="art"
-              draggable={false}
-              src={albumArtPlaceholder}
-              alt="Placeholder Album Art"
-            />
-            <img
-              className="spotify-icon"
-              draggable={false}
-              src={spotifyIcon}
-              alt="Spotify Logo"
-            />
-          </div>
-          <div className="info-control-container">
-            <div className="song-info">
-              <h3 className="title">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
-                Placeholder Title
-              </h3>
-              <h5 className="artist">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                Artist Name
-              </h5>
-              <p className="album">
-                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
-                Album Title
-              </p>
+          {/* album art, song info, like/dislike buttons, prev/pause/next */}
+          <div className="content-upper">
+            <div className="album-art">
+              {/* show album art placeholder while fetching art from backend --> API */}
+              {/* show placeholder art if albumArt === "" <-- AKA it hasn't been fetched yet. Upon IPC message, set albumArt to the image link */}
+              {/* use 640x640 album art */}
+              <img
+                className="art"
+                draggable={false}
+                src={albumArtPlaceholder}
+                alt="Placeholder Album Art"
+              />
+              <img
+                className="spotify-icon"
+                draggable={false}
+                src={spotifyIcon}
+                alt="Spotify Logo"
+              />
             </div>
-            <div className="song-controls">
-              <button>
-                <img draggable={false} src={prevIcon} alt="Previous" />
-              </button>
-              {/* conditionally change icon based on isPlaying state */}
-              <button>
-                <img draggable={false} src={playIcon} alt="Play" />
-              </button>
-              <button>
-                <img draggable={false} src={nextIcon} alt="Next" />
-              </button>
+            <div className="info-control-container">
+              <div className="song-info">
+                <h3 className="title">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
+                  Placeholder Title
+                </h3>
+                <h5 className="artist">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                  Artist Name
+                </h5>
+                <p className="album">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+                  Album Title
+                </p>
+              </div>
+              <div className="song-controls">
+                <button disabled={spotifyPlayer === null}>
+                  <img draggable={false} src={prevIcon} alt="Previous" />
+                </button>
+                {/* conditionally change icon based on isPlaying state */}
+                <button disabled={spotifyPlayer === null}>
+                  <img draggable={false} src={playIcon} alt="Play" />
+                </button>
+                <button disabled={spotifyPlayer === null}>
+                  <img draggable={false} src={nextIcon} alt="Next" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-        {/* volume slider and song length info */}
-        <div className="content-lower">
-          <Slider
-            className="slider"
-            size="small"
-            min={0}
-            step={1}
-            value={slider}
-            max={songLength}
-            aria-label="Small"
-            valueLabelDisplay="off"
-            onChange={(_, val) => setSlider(val)}
-            // MUI slider style overrides
-            sx={{
-              color: `${theme.style === "light" ? "#322f3d" : "#fff"}`,
-              height: 4,
-              "& .MuiSlider-thumb": {
-                width: 8,
-                height: 8,
-                transition: "0.3s cubic-bezier(.47,1.64,.41,.8)",
-                "&:before": {
-                  boxShadow: "0 2px 12px 0 rgba(0,0,0,0.4)",
+          {/* volume slider and song length info */}
+          <div className="content-lower">
+            <Slider
+              className="slider"
+              size="small"
+              min={0}
+              step={1}
+              value={slider}
+              max={songLength}
+              aria-label="Small"
+              valueLabelDisplay="off"
+              onChange={(_, val) => setSlider(val)}
+              // MUI slider style overrides
+              sx={{
+                color: `${theme.style === "light" ? "#322f3d" : "#fff"}`,
+                height: 4,
+                "& .MuiSlider-thumb": {
+                  width: 8,
+                  height: 8,
+                  transition: "0.3s cubic-bezier(.47,1.64,.41,.8)",
+                  "&:before": {
+                    boxShadow: "0 2px 12px 0 rgba(0,0,0,0.4)",
+                  },
+                  "&:hover, &.Mui-focusVisible": {
+                    boxShadow: "rgb(255 255 255 / 16%)",
+                  },
+                  "&.Mui-active": {
+                    width: 20,
+                    height: 20,
+                  },
                 },
-                "&:hover, &.Mui-focusVisible": {
-                  boxShadow: "rgb(255 255 255 / 16%)",
+                "& .MuiSlider-rail": {
+                  opacity: 0.28,
                 },
-                "&.Mui-active": {
-                  width: 20,
-                  height: 20,
-                },
-              },
-              "& .MuiSlider-rail": {
-                opacity: 0.28,
-              },
-            }}
-          />
-          <span className="time-in">{formatDuration(slider)}</span>
-          <span className="time-left">{formatDuration(songLength - slider)}</span>
-        </div>
+              }}
+            />
+            <span className="time-in">{formatDuration(slider)}</span>
+            <span className="time-left">{formatDuration(songLength - slider)}</span>
+          </div>
       </div>
     </Wrapper>
   );
