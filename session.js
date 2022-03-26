@@ -13,6 +13,16 @@ function generateSesId(){
     return result;
 }
 
+class timeStruct {
+    static whenUpdated;
+    static whereUpdated;
+}
+
+class curSong {
+    static curr = new songStruct;
+    static time = new timeStruct;
+}
+
 let empty = new songStruct;
 empty.title = "";
 empty.artist = [""];
@@ -22,34 +32,51 @@ empty.id = "";
 empty.length = "";
 empty.uri = "";
 
+let emptyCurrent = new curSong;
+let emptyTime = new timeStruct;
+
+emptyTime.whenUpdated = 0;
+emptyTime.whereUpdated = 0;
+
+emptyCurrent.curr = empty;
+emptyCurrent.time = emptyTime;
+
+
 class Session {
 
     // current song is blank by default when a session starts
     static currentSong = empty;
     static queue = [];
     static sId = "";
-    static listenerFunc = null; //the listener function to the server id data
+    static queueListener = null; //the listener function to the server id data
+    static songListener = null;
     static host = false;
 
     static joinSession(id){  
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
-            Session.listenerFunc = Database.getData("Server/" + id + "/queue", (snapshot) => {
+            let verified = [false, false];
+            Session.queueListener = Database.getData("Server/" + id + "/queue", (snapshot) => {
                 if(snapshot.exists()) {
                     Session.sId = id;
                     Session.queue = snapshot.val();
-                    res(true);
+                    verified[0] = true;
                 } else {
                     console.log("Server does not exist");
                     res(false);
                 }
-                //snapshot.forEach(item => {
-                    //let element = new songStruct;
-                    //element.title = 
-                //});
-               
-                //console.log(Session.queue);
             });
+            Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => {
+                if(snapshot.exists()) {
+                    Session.sId = id;
+                    Session.queue = snapshot.val();
+                    verified[1] = true;
+                } else {
+                    console.log("Server does not exist");
+                    res(false);
+                }
+            });
+            res((verified[0] && verified[1]));
         })
         return sessionPromise;
     }
@@ -62,7 +89,7 @@ class Session {
         }
         else {
             Session.queue = newQueue;
-            Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+            Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
         }
     }
 
@@ -72,33 +99,34 @@ class Session {
     
     static leaveSession(){
         if(!Session.host){
-            Session.host = false;
             Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening
+            Database.removeListener("Server/" + Session.sId + "/currentSong"); //stop listening to the server
             Session.queue = []; //reset queues and id
             Session.sId = "";
+            Session.currentSong = empty;
         }
     }
 
     static changeCurrentSong(song) {
-        this.currentSong = song;
+        Session.currentSong.curr = song;
     }
 
     static queueSong(song){
         if (Session.queue[0].album == ""){ //If the first song is a filler song, clear it and then push the new song on top
             Session.queue = [];
             Session.queue.push(song);
-            Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+            Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
         }
         else { //If there are already songs in queue
             Session.queue.push(song);
-            Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+            Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
         }
     }
 
     static clearQueue(){ //Called by the host to clear the queue
         Session.queue = [];
         Session.queue.push(empty);
-        Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+        Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
     }
 
 
@@ -110,7 +138,7 @@ class Session {
                 if(Session.queue.length == 0){ //If the queue is now empty, replace it with an empty queue
                     Session.clearQueue();
                 } else { //Write the new queue without the element to the server
-                    Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+                    Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
                 }
                 break;
             }
@@ -125,9 +153,29 @@ class Session {
     static createSession(){
         Session.host = true;
         Session.sId = generateSesId();
+        //Session.sId =  "TES-TSE-RVER";
         Session.queue.push(empty);
-        //console.log(Session.queue);
-        Database.createData("Server/" + Session.sId, { "queue" : Session.queue});
+        Session.currentSong = emptyCurrent;
+
+        Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
+
+        Session.queueListener = Database.getData("Server/" + Session.sId + "/queue", (snapshot) => { //listener to queue information
+            if(snapshot.exists()) {
+                Session.queue = snapshot.val();
+            } else {
+                console.log("Server does not exist");
+            }
+
+        });
+
+        Session.songListener = Database.getData("Server/" + Session.sId + "/currentSong", (snapshot) => { //listener for current song information
+            if(snapshot.exists()) {
+                Session.currentSong = snapshot.val();
+            } else {
+                console.log("Server does not exist");
+            }
+
+        });
         return Session.sId;
         //Database.createData("Server/" + Session.sId, { "queue" : ["test2"]});
         //Send id to firebase
@@ -136,9 +184,16 @@ class Session {
 
     static deleteSession() {
         if(Session.host && Session.sId != ""){
+            
             Database.deleteData("Server/" + Session.sId);
             Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
+            Database.removeListener("Server/" + Session.sId + "/currentSong"); //stop listening to the server
+           
+            
             Session.sId = "";
+            Session.host = false;
+            Session.currentSong = empty;
+            Session.queue = [];
         }
     }
 }   
