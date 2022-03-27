@@ -76,11 +76,31 @@ class Session {
                     res(false);
                 }
             });
-            res((verified[0] && verified[1]));
+            res((verified[0] && verified[1])); //If both worked, it would be true && true
         })
         return sessionPromise;
     }
 
+
+    static nextSong(){
+        Session.currentSong.curr = Session.queue[0]; //Set the current song to the first one on the queue
+        Session.queue.splice(0, 1);
+        if (Session.queue.length == 0){ //If the queue is now empty, replace it with an empty queue
+            Session.clearQueue();
+        } else { //Write the new queue without the element to the server
+            Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
+        }
+    }
+
+
+    //Shuffle algorithm gotten from https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array, adapted to fit our needs
+    static shuffleQueue(){
+        for (let i = Session.queue.length - 1; i > 0; i--) { 
+            let j = Math.floor(Math.random() * (i + 1));
+            [Session.queue[i], Session.queue[j]] = [Session.queue[j], Session.queue[i]]; // swap two elements 
+        }
+        Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
+    }
 
     static changeQueue(newQueue){
         //change the current queue to the new input

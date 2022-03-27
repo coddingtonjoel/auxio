@@ -146,21 +146,16 @@ class AppMenu extends Menu {
             }
           },
           {
-            label: "createSession",
+            label: "shuffleQueue",
             click: () => {
-                Session.createSession();
-                let id = Session.getId();
-                console.log("Created Session With Id:", id); //for debugging or seeing attribute names
+                Session.shuffleQueue();
+      
             }
           },
           {
-            label: "deleteSession",
+            label: "nextSong",
             click: () => {
-                let id = Session.getId();
-                if(id != ""){
-                    Session.deleteSession();
-                    console.log("Deleted Session With Id:", id); //for debugging or seeing attribute names
-                }
+                Session.nextSong();
             }
           },
           {
