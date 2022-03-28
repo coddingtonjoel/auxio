@@ -48,6 +48,7 @@
     "react-helmet": "^6.1.0",
     "react-router-dom": "^6.2.1",
     "react-sortablejs": "^6.1.1",
+    "react-spinner-material": "^1.4.0",
     "react-spotify-web-playback-sdk": "^3.0.1",
     "react-transition-group": "^4.4.2",
     "sortablejs": "^1.15.0",

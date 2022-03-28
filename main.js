@@ -226,7 +226,9 @@ app.on('ready', () => {
   })
 
   ipcMain.on("currentSong:change", (e, data) => {
+    console.log(data.song);
     Session.changeCurrentSong(data.song);
+    mainWindow.webContents.send("player:change", {song: data.song});
   })
 })
 

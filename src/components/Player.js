@@ -13,7 +13,8 @@ import prevIcon from "../assets/icons/previous.svg";
 import nextIcon from "../assets/icons/skip.svg";
 import Slider from "@mui/material/Slider";
 import { SessionContext } from "../SessionContext";
-import { useSpotifyPlayer } from "react-spotify-web-playback-sdk";
+import { useSpotifyPlayer, useWebPlaybackSDKReady } from "react-spotify-web-playback-sdk";
+import Spinner from 'react-spinner-material';
 
 // turn song from seconds into minutes
 const formatDuration = (value) => {
@@ -25,8 +26,24 @@ const formatDuration = (value) => {
 const Player = () => {
   const theme = useTheme();
   const spotifyPlayer = useSpotifyPlayer();
+  const webPlaybackSDKReady = useWebPlaybackSDKReady();
   const [ID, setID] = useContext(SessionContext);
+
+  // default blank song
+  // TODO eventually make this screen a helper for selecting a song from Search rather than showing blank info?
+  const [song, setSong] = useState({
+    title: "...",
+    artists: ["..."],
+    album: "...",
+    id: null,
+    albumArt: [albumArtPlaceholder],
+    uri: null,
+    length: 0
+  });
+
+  const [songPos, setSongPos] = useState(0);
   const [slider, setSlider] = useState(0);
+  const [loading, setLoading] = useState(true);
   const songLength = 200;
   let isHost = true;
 
@@ -37,13 +54,30 @@ const Player = () => {
     ipcRenderer.on("getID:return", (e, data) => {
       setID(data.id);
     })
-  }, []);
 
-  useEffect(() => {
+    ipcRenderer.on("player:change", (e, data) => {
+      setSong(data.song);
+    });
+
     if (spotifyPlayer !== null) {
       console.log(spotifyPlayer);
     }
-  })
+  }, []);
+
+  useEffect(() => {
+    // TODO wait for session data to be received
+    if (webPlaybackSDKReady) {
+      setLoading(false);
+      console.log("Ready!");
+    }
+  }, [webPlaybackSDKReady])
+
+  useEffect(() => {
+    // if song isn't the placeholder
+    if (song.uri !== null) {
+      console.log(spotifyPlayer);
+    }
+  }, [song])
 
   // include React context for sessionDetails upon connecting to a session. Upon leaving, clear that context
   // Context is needed because Join.js and Player.js both use it and they're sibling components
@@ -84,6 +118,7 @@ const Player = () => {
     
   return (
     <Wrapper>
+      {loading ? <div className="loader"><Spinner radius={40} stroke={3} visible color={theme.primary}/></div> : null}
       <span className="session-id">{ID}</span>
       <div className="control-buttons">
         {/* host panel is only available as a session host */}
@@ -116,7 +151,7 @@ const Player = () => {
               <img
                 className="art"
                 draggable={false}
-                src={albumArtPlaceholder}
+                src={song.albumArt[0]}
                 alt="Placeholder Album Art"
               />
               <img
@@ -130,15 +165,15 @@ const Player = () => {
               <div className="song-info">
                 <h3 className="title">
                   <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
-                  Placeholder Title
+                  {song.title}
                 </h3>
                 <h5 className="artist">
                   <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                  Artist Name
+                  {song.artists[0]}
                 </h5>
                 <p className="album">
                   <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill={theme.style === "light" ? "#000" : "#fff"}><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
-                  Album Title
+                  {song.album}
                 </p>
               </div>
               <div className="song-controls">
@@ -203,6 +238,21 @@ const Wrapper = styled.div`
   position: relative; 
   padding: 8px;
 
+  .loader {
+    position: absolute;
+  }
+
+  .loader::before {
+    content: "";
+    /* height: 100vh; */
+    /* width: 100vw; */
+    /* background-color: white; */
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    left: 0;
+  }
+
   .MuiSlider-thumb.Mui-focusVisible, .MuiSlider-thumb:hover {
     box-shadow:none !important;
   }
@@ -256,6 +306,7 @@ const Wrapper = styled.div`
   .content {
     padding: 40px 20px 0;
   }
+
   .content-upper {
     display: flex;
     align-items: center;
@@ -298,7 +349,7 @@ const Wrapper = styled.div`
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
-            width: 300px;
+            width: 320px;
             margin-bottom: -5px;
 
             svg {
@@ -307,7 +358,7 @@ const Wrapper = styled.div`
           }
             
           .title {
-            font-size: 33px;
+            font-size: 26px;
             
             svg {
               transform: translateY(1px);
@@ -317,7 +368,7 @@ const Wrapper = styled.div`
           .artist {
             font-size: 20px;
             font-weight: 400;
-            transform: translateY(-10px);
+            transform: translateY(-15px);
 
             svg {
               transform: translateY(4px);
