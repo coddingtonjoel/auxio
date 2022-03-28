@@ -227,8 +227,13 @@ app.on('ready', () => {
 
   ipcMain.on("currentSong:change", (e, data) => {
     console.log(data.song);
+    console.log(data.newTime);
     Session.changeCurrentSong(data.song);
-    mainWindow.webContents.send("player:change", {song: data.song});
+
+    // band-aid solution; this should be changed to send back the new song time from the session ideally
+    if (data.newTime === 0) {
+      mainWindow.webContents.send("player:change", {song: data.song});
+    }
   })
 })
 

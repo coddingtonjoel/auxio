@@ -24,7 +24,7 @@ const Search = () => {
   }
 
   const handlePlay = (song) => {
-    ipcRenderer.send("currentSong:change", ({song}));
+    ipcRenderer.send("currentSong:change", ({song, newTime: 0}));
   }
 
   // init ipc listener

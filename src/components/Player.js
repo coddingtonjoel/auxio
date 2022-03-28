@@ -44,7 +44,6 @@ const Player = () => {
   const [songPos, setSongPos] = useState(0);
   const [slider, setSlider] = useState(0);
   const [loading, setLoading] = useState(true);
-  const songLength = 200;
   let isHost = true;
 
   useEffect(() => {
@@ -114,6 +113,10 @@ const Player = () => {
 
   const handleSearchOpener = () => {
     ipcRenderer.send("open:search");
+  }
+
+  const handleNewSongPos = (e, val) => {
+    ipcRenderer.send("currentSong:change", {song, newTime: val});
   }
     
   return (
@@ -198,8 +201,9 @@ const Player = () => {
               min={0}
               step={1}
               value={slider}
-              max={songLength}
+              max={song.length}
               aria-label="Small"
+              onChangeCommitted={handleNewSongPos}
               valueLabelDisplay="off"
               onChange={(_, val) => setSlider(val)}
               // MUI slider style overrides
@@ -227,7 +231,7 @@ const Player = () => {
               }}
             />
             <span className="time-in">{formatDuration(slider)}</span>
-            <span className="time-left">{formatDuration(songLength - slider)}</span>
+            <span className="time-left">{formatDuration(song.length - slider)}</span>
           </div>
       </div>
     </Wrapper>
@@ -244,9 +248,10 @@ const Wrapper = styled.div`
 
   .loader::before {
     content: "";
-    /* height: 100vh; */
-    /* width: 100vw; */
+    /* height: 100vh;
+    width: 100vw; */
     /* background-color: white; */
+    border: red 1px solid;
     position: absolute;
     z-index: 3;
     top: 0;
