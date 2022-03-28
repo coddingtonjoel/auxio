@@ -62,7 +62,7 @@ class Session {
                     Session.queue = snapshot.val();
                     verified[0] = true;
                 } else {
-                    console.log("Server does not exist");
+                    //console.log("Server does not exist");
                     res(false);
                 }
             });
@@ -72,7 +72,7 @@ class Session {
                     Session.queue = snapshot.val();
                     verified[1] = true;
                 } else {
-                    console.log("Server does not exist");
+                    //console.log("Server does not exist");
                     res(false);
                 }
             });
@@ -183,7 +183,7 @@ class Session {
             if(snapshot.exists()) {
                 Session.queue = snapshot.val();
             } else {
-                console.log("Server does not exist");
+                //console.log("Server does not exist");
             }
 
         });
@@ -192,7 +192,7 @@ class Session {
             if(snapshot.exists()) {
                 Session.currentSong = snapshot.val();
             } else {
-                console.log("Server does not exist");
+                //console.log("Server does not exist");
             }
 
         });
@@ -219,6 +219,8 @@ class Session {
 }   
 
 module.exports = {
-    Session
+    Session,
+    timeStruct,
+    curSong
 }
 exports.generateSesId = generateSesId;

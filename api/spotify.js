@@ -166,7 +166,8 @@ class SpotifyCred{
           );
         }
       }).catch((error) => {
-        console.log("Spotify Login Failed: Database Not Reached!"); //read from database failed
+        //console.log("error was found")
+        SpotifyCred.login(code); //read from database failed
       });
       return successfulLogin;
   }
