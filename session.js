@@ -128,7 +128,8 @@ class Session {
     }
 
     static changeCurrentSong(song) {
-        Session.currentSong.curr = song;
+        Session.currentSong = song;
+        Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
     }
 
     static queueSong(song){

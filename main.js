@@ -8,6 +8,8 @@ const WindowsModule = require("./windows");
 const {GoogleCred} = require("./api/google.js");
 const {Database} = require("./api/firebase.js");
 const {SpotifyCred} = require("./api/spotify");
+const {timeStruct} = require("./session.js");
+const {curSong} = require("./session.js");
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -226,9 +228,16 @@ app.on('ready', () => {
   })
 
   ipcMain.on("currentSong:change", (e, data) => {
-    console.log(data.song);
-    console.log(data.newTime);
-    Session.changeCurrentSong(data.song);
+    let globalTime = new Date();
+    let tempTime = new timeStruct;
+
+    tempTime.whereUpdated = data.newTime;
+    tempTime.whenUpdated = Math.round(globalTime.getTime() / 1000); //gets time in seconds since January 1, 1970
+
+    let song = new curSong;
+    song.time = tempTime;
+    song.curr = data.song;
+    Session.changeCurrentSong(song);
 
     // band-aid solution; this should be changed to send back the new song time from the session ideally
     if (data.newTime === 0) {
