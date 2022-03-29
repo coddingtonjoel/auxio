@@ -24,7 +24,20 @@ class AppMenu extends Menu {
       });
     }
 
-    
+    template.push({
+      label: "Session",
+      submenu: [
+        {
+          label: "Leave Session",
+          accelerator: "CmdOrCtrl+L",
+          click: () => {
+              Session.leaveSession();
+              win.webContents.send("session:leave");
+              console.log("Left the session");
+          }
+        },
+      ]
+    });
 
     template.push({
       label: "Preferences",
@@ -163,13 +176,6 @@ class AppMenu extends Menu {
             click: () => {
                 Session.joinSession("2FI-ULR-844P");
                 console.log("Joined the session");
-            }
-          },
-          {
-            label: "leaveSession",
-            click: () => {
-                Session.leaveSession();
-                console.log("Left the session");
             }
           },
           {

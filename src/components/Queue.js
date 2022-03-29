@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { useTheme } from 'styled-components';
 import { ipcRenderer } from 'electron';
 import closeBlack from "../assets/icons/closeBlack.svg";
@@ -6,16 +6,7 @@ import closeWhite from "../assets/icons/closeWhite.svg";
 import menuBlack from "../assets/icons/menuBlack.svg";
 import menuWhite from "../assets/icons/menuWhite.svg";
 import { ReactSortable } from "react-sortablejs";
-
-// Custom hook: https://stackoverflow.com/questions/53179075/with-useeffect-how-can-i-skip-applying-an-effect-upon-the-initial-render
-// Skips useEffect first render
-export const useIsMount = () => {
-  const isMountRef = useRef(true);
-  useEffect(() => {
-    isMountRef.current = false;
-  }, []);
-  return isMountRef.current;
-};
+import { useIsMount } from './useIsMount';
 
 const Queue = () => {
   const theme = useTheme();

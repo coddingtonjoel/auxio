@@ -1,5 +1,5 @@
 // Import parts of electron to use
-const { app, BrowserWindow, ipcMain, screen } = require('electron')
+const { app, BrowserWindow, ipcMain, screen, components } = require('electron')
 const path = require('path')
 const url = require('url')
 const AppMenu = require("./AppMenu");
@@ -97,7 +97,8 @@ function createMainWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', () => {
+app.on('ready', async () => {
+  await components.whenReady();
   createMainWindow();
   const mainScreen = screen.getPrimaryDisplay;
   const monitorWidth = mainScreen().size.width;
@@ -175,7 +176,9 @@ app.on('ready', () => {
   })
 
   ipcMain.on("getSpotifyToken", (e) => {
-    e.sender.send("getSpotifyToken:return", {token: SpotifyCred.accessT});
+    // console.log("sending token");
+    // console.log(SpotifyCred.accessT);
+    mainWindow.webContents.send("getSpotifyToken:return", {token: SpotifyCred.accessT});
   })
 
   // window openers/closers for frontend use

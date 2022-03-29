@@ -13,8 +13,9 @@ import prevIcon from "../assets/icons/previous.svg";
 import nextIcon from "../assets/icons/skip.svg";
 import Slider from "@mui/material/Slider";
 import { SessionContext } from "../SessionContext";
-import { useSpotifyPlayer, useWebPlaybackSDKReady } from "react-spotify-web-playback-sdk";
+import { useSpotifyPlayer, useWebPlaybackSDKReady, usePlayerDevice, usePlaybackState } from "react-spotify-web-playback-sdk";
 import Spinner from 'react-spinner-material';
+import { useIsMount } from "./useIsMount";
 
 // turn song from seconds into minutes
 const formatDuration = (value) => {
@@ -23,10 +24,14 @@ const formatDuration = (value) => {
   return `${minute}:${secondLeft < 10 ? `0${secondLeft}` : secondLeft}`;
 }
 
-const Player = () => {
+const Player = (props) => {
+  
   const theme = useTheme();
+  const isMount = useIsMount();
+  const playbackState = usePlaybackState();
   const spotifyPlayer = useSpotifyPlayer();
   const webPlaybackSDKReady = useWebPlaybackSDKReady();
+  const device = usePlayerDevice();
   const [ID, setID] = useContext(SessionContext);
 
   // default blank song
@@ -44,7 +49,24 @@ const Player = () => {
   const [songPos, setSongPos] = useState(0);
   const [slider, setSlider] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [volume, setVolume] = useState(0.5);
   let isHost = true;
+
+  const changeDeviceSong = (song) => {
+    if (device === null) return;
+
+    fetch(
+      `https://api.spotify.com/v1/me/player/play?device_id=${device.device_id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ uris: [song.uri] }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${props.token}`,
+        },
+      },
+    );
+  };
 
   useEffect(() => {
     ipcRenderer.send("windowSize:player");
@@ -58,6 +80,17 @@ const Player = () => {
       setSong(data.song);
     });
 
+    ipcRenderer.on("session:leave", () => {
+      try {
+        if (spotifyPlayer !== null) {
+          spotifyPlayer.disconnect();
+        }
+      }
+      catch(err) {
+        console.log(err);
+      }
+    })
+
     if (spotifyPlayer !== null) {
       console.log(spotifyPlayer);
     }
@@ -65,7 +98,7 @@ const Player = () => {
 
   useEffect(() => {
     // TODO wait for session data to be received
-    if (webPlaybackSDKReady) {
+    if (webPlaybackSDKReady && !isMount) {
       setLoading(false);
       console.log("Ready!");
     }
@@ -74,9 +107,28 @@ const Player = () => {
   useEffect(() => {
     // if song isn't the placeholder
     if (song.uri !== null) {
+      spotifyPlayer.connect();
       console.log(spotifyPlayer);
+      console.log(song.uri);
+      console.log(props.token)
+      changeDeviceSong(song);
     }
   }, [song])
+
+  useEffect(() => {
+    if (song.uri !== null) {
+      ipcRenderer.send("currentSong:change", {song, newTime: songPos});
+    }
+  }, [songPos]);
+
+  useEffect(() => {
+    try {
+      console.log(playbackState.position)
+    }
+    catch(err) {
+      console.log(err)
+    }
+  }, [playbackState]);
 
   // include React context for sessionDetails upon connecting to a session. Upon leaving, clear that context
   // Context is needed because Join.js and Player.js both use it and they're sibling components
@@ -116,12 +168,13 @@ const Player = () => {
   }
 
   const handleNewSongPos = (e, val) => {
-    ipcRenderer.send("currentSong:change", {song, newTime: val});
+    setSongPos(val);
   }
     
   return (
     <Wrapper>
-      {loading ? <div className="loader"><Spinner radius={40} stroke={3} visible color={theme.primary}/></div> : null}
+     
+      {loading ? <div className="loader"><Spinner className="spinner" radius={50} stroke={4} visible color={theme.primary}/></div> : null}
       <span className="session-id">{ID}</span>
       <div className="control-buttons">
         {/* host panel is only available as a session host */}
@@ -148,12 +201,10 @@ const Player = () => {
           {/* album art, song info, like/dislike buttons, prev/pause/next */}
           <div className="content-upper">
             <div className="album-art">
-              {/* show album art placeholder while fetching art from backend --> API */}
-              {/* show placeholder art if albumArt === "" <-- AKA it hasn't been fetched yet. Upon IPC message, set albumArt to the image link */}
-              {/* use 640x640 album art */}
               <img
                 className="art"
                 draggable={false}
+                /* use 640x640 album art */
                 src={song.albumArt[0]}
                 alt="Placeholder Album Art"
               />
@@ -243,19 +294,28 @@ const Wrapper = styled.div`
   padding: 8px;
 
   .loader {
+    position: relative;
+  }
+
+  .spinner {
+    margin-top: 150px;
+    z-index: 3;
     position: absolute;
+    top: 50%;
+    left: 48%;
   }
 
   .loader::before {
     content: "";
-    /* height: 100vh;
-    width: 100vw; */
-    /* background-color: white; */
-    border: red 1px solid;
+    height: 100vh;
+    width: 100vw;
+    background-color: white;
     position: absolute;
-    z-index: 3;
+    z-index: 1;
+    opacity: 0.85;
     top: 0;
     left: 0;
+    margin: -8px;
   }
 
   .MuiSlider-thumb.Mui-focusVisible, .MuiSlider-thumb:hover {

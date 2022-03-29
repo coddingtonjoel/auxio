@@ -17,18 +17,32 @@ import GlobalStyle from "../globalStyles";
 import { Helmet } from "react-helmet";
 import { TransitionGroup, CSSTransition } from "react-transition-group";
 import { WebPlaybackSDK } from "react-spotify-web-playback-sdk";
+import { useIsMount } from "./useIsMount";
 
 function App() {
   const navigate = useNavigate();
+  const isMount = useIsMount();
   const location = useLocation();
 
   // access this in other places using withTheme()
   const [mode, setMode] = useState(lightTheme);
   const [token, setToken] = useState(null);
-  const [volume, setVolume] = useState(0.5);
-
-  // TODO "Not establishing connection to Spotify". useSpotifyPlayer() is returning null. Probably something with the useCallback() for the oathtoken in App.js? 
-  const getOAuthToken = useCallback(callback => callback(token), []);
+  
+  const Temp = (props) => {
+    console.log("TOKEN from Temp:" + props.token)
+    const getOAuthToken = useCallback(callback => callback(props.token), []);
+    if (props.token === null || typeof props.token === undefined) {
+      return null;
+    }
+    useEffect(() => {
+      console.log("TEMP: Token changed: ", props.token);
+    }, props.token)
+    return (
+      <WebPlaybackSDK initialDeviceName="Auxio Player" getOAuthToken={getOAuthToken} volume={0.5} connectOnInitialized={false}>
+        <Player token={props.token}/>
+      </WebPlaybackSDK>
+    )
+  }
 
   // prop func sent down to set new mode in both state and local storage
   const toggleMode = (newMode) => {
@@ -51,8 +65,14 @@ function App() {
 
     ipcRenderer.send("getSpotifyToken");
 
-    ipcRenderer.once("getSpotifyToken:return", (e, data) => {
+    ipcRenderer.on("getSpotifyToken:return", (e, data) => {
+      console.log("Token received: " + data.token)
       setToken(data.token);
+    })
+
+    ipcRenderer.on("session:leave", () => {
+      navigate("/connect");
+      ipcRenderer.send("windowSize:welcome");
     })
   }, []);
 
@@ -79,11 +99,7 @@ function App() {
             <Route exact path="/" element={<Welcome />} />
             {/* <Route exact path="/" element={<Queue />} /> */}
             <Route exact path="/connect" element={<Connect />} />
-            <Route exact path="/player" element={(
-              <WebPlaybackSDK initialDeviceName="Auxio Player" getOAuthToken={getOAuthToken} volume={volume} connectOnInitialized={false}>
-                <Player/>
-              </WebPlaybackSDK>
-            )}/>
+            <Route exact path="/player" element={<div>{token !== null ? <Temp token={token}/> : null}</div>}/>
             <Route exact path="/join" element={<Join />} />
             <Route exact path="/host" element={<HostPanel />} />
             <Route exact path="/volume" element={<Volume />} />
