@@ -13,7 +13,6 @@ import prevIcon from "../assets/icons/previous.svg";
 import nextIcon from "../assets/icons/skip.svg";
 import Slider from "@mui/material/Slider";
 import { SessionContext } from "../SessionContext";
-import { useSpotifyPlayer, useWebPlaybackSDKReady, usePlayerDevice, usePlaybackState } from "react-spotify-web-playback-sdk";
 import Spinner from 'react-spinner-material';
 import { useIsMount } from "./useIsMount";
 
@@ -28,10 +27,6 @@ const Player = (props) => {
   
   const theme = useTheme();
   const isMount = useIsMount();
-  const playbackState = usePlaybackState();
-  const spotifyPlayer = useSpotifyPlayer();
-  const webPlaybackSDKReady = useWebPlaybackSDKReady();
-  const device = usePlayerDevice();
   const [ID, setID] = useContext(SessionContext);
 
   // default blank song
@@ -46,31 +41,64 @@ const Player = (props) => {
     length: 0
   });
 
+  const track = {
+    name: "",
+    album: {
+        images: [
+            { url: "" }
+        ]
+    },
+    artists: [
+        { name: "" }
+    ]
+}
+
   const [songPos, setSongPos] = useState(0);
+  const [player, setPlayer] = useState(undefined);
+  const [is_paused, setPaused] = useState(false);
+  const [is_active, setActive] = useState(false);
+  const [token, setToken] = useState(undefined);
+  const [current_track, setTrack] = useState(track);
   const [slider, setSlider] = useState(0);
   const [loading, setLoading] = useState(true);
   const [volume, setVolume] = useState(0.5);
+  const [deviceID, setDeviceID] = useState(undefined);
   let isHost = true;
 
-  const changeDeviceSong = (song) => {
-    if (device === null) return;
-
-    fetch(
-      `https://api.spotify.com/v1/me/player/play?device_id=${device.device_id}`,
-      {
-        method: "PUT",
-        body: JSON.stringify({ uris: [song.uri] }),
+  const play = ({
+    spotify_uri,
+    playerInstance: {
+      _options: {
+        getOAuthToken
+      }
+    }
+  }) => {
+    getOAuthToken(access_token => {
+      fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceID}`, {
+        method: 'PUT',
+        body: JSON.stringify({ uris: [spotify_uri] }),
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${props.token}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${access_token}`
         },
-      },
-    );
+      });
+    });
   };
+
+  // const changeDeviceSong = (song) => {
+  //   player.togglePlay();
+  // };
 
   useEffect(() => {
     ipcRenderer.send("windowSize:player");
     ipcRenderer.send("getID");
+
+    ipcRenderer.send("getSpotifyToken");
+
+    ipcRenderer.once("getSpotifyToken:return", (e, data) => {
+      console.log("Token received: " + data.token)
+      setToken(data.token);
+    })
 
     ipcRenderer.on("getID:return", (e, data) => {
       setID(data.id);
@@ -81,37 +109,76 @@ const Player = (props) => {
     });
 
     ipcRenderer.on("session:leave", () => {
-      try {
-        if (spotifyPlayer !== null) {
-          spotifyPlayer.disconnect();
-        }
-      }
-      catch(err) {
-        console.log(err);
-      }
+      // try {
+      //   if (spotifyPlayer !== null) {
+      //     spotifyPlayer.disconnect();
+      //   }
+      // }
+      // catch(err) {
+      //   console.log(err);
+      // }
     })
-
-    if (spotifyPlayer !== null) {
-      console.log(spotifyPlayer);
-    }
   }, []);
 
   useEffect(() => {
-    // TODO wait for session data to be received
-    if (webPlaybackSDKReady && !isMount) {
-      setLoading(false);
-      console.log("Ready!");
+    if (token) {
+      // ############################
+    // ## SPOTIFY WEB PLAYER SDK ##
+    // ############################
+
+    // add spotify player sdk script
+    const script = document.createElement("script");
+    script.src = "https://sdk.scdn.co/spotify-player.js";
+    script.async = true;
+
+    document.body.appendChild(script);
+
+    try {
+      window.onSpotifyWebPlaybackSDKReady = () => {
+        const player = new window.Spotify.Player({
+            name: 'Auxio Player',
+            getOAuthToken: cb => { cb(token); },
+            volume: 0.5
+        });
+        setPlayer(player);
+        player.addListener('ready', ({ device_id }) => {
+            console.log('Ready with Device ID', device_id);
+            setDeviceID(device_id);
+            setLoading(false);
+        });
+        player.addListener('not_ready', ({ device_id }) => {
+            console.log('Device ID has gone offline', device_id);
+        });
+        player.connect();
+      };
+
+      player.addListener('player_state_changed', ( state => {
+        if (!state) {
+            return;
+        }
+        setTrack(state.track_window.current_track);
+        setPaused(state.paused);
+        player.getCurrentState().then( state => { 
+            (!state)? setActive(false) : setActive(true) 
+        });
+      }));
     }
-  }, [webPlaybackSDKReady])
+   catch(err) {console.log(err)}}
+  }, [token])
 
   useEffect(() => {
     // if song isn't the placeholder
-    if (song.uri !== null) {
-      spotifyPlayer.connect();
-      console.log(spotifyPlayer);
-      console.log(song.uri);
-      console.log(props.token)
-      changeDeviceSong(song);
+    if (song.uri !== null && player !== undefined) {
+      // spotifyPlayer.connect();
+      // console.log(spotifyPlayer);
+      // console.log(song.uri);
+      // console.log(props.token)
+      // changeDeviceSong(song); 
+      // setTrack()
+      play({
+        playerInstance: player,
+        spotify_uri: song.uri
+      })
     }
   }, [song])
 
@@ -120,15 +187,6 @@ const Player = (props) => {
       ipcRenderer.send("currentSong:change", {song, newTime: songPos});
     }
   }, [songPos]);
-
-  useEffect(() => {
-    try {
-      console.log(playbackState.position)
-    }
-    catch(err) {
-      console.log(err)
-    }
-  }, [playbackState]);
 
   // include React context for sessionDetails upon connecting to a session. Upon leaving, clear that context
   // Context is needed because Join.js and Player.js both use it and they're sibling components
@@ -231,14 +289,17 @@ const Player = (props) => {
                 </p>
               </div>
               <div className="song-controls">
-                <button disabled={spotifyPlayer === null}>
+                {/* <button disabled={spotifyPlayer === null}> */}
+                <button>
                   <img draggable={false} src={prevIcon} alt="Previous" />
                 </button>
                 {/* conditionally change icon based on isPlaying state */}
-                <button disabled={spotifyPlayer === null}>
+                {/* <button disabled={spotifyPlayer === null}> */}
+                <button>
                   <img draggable={false} src={playIcon} alt="Play" />
                 </button>
-                <button disabled={spotifyPlayer === null}>
+                {/* <button disabled={spotifyPlayer === null}> */}
+                <button>
                   <img draggable={false} src={nextIcon} alt="Next" />
                 </button>
               </div>

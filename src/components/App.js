@@ -26,23 +26,7 @@ function App() {
 
   // access this in other places using withTheme()
   const [mode, setMode] = useState(lightTheme);
-  const [token, setToken] = useState(null);
-  
-  const Temp = (props) => {
-    console.log("TOKEN from Temp:" + props.token)
-    const getOAuthToken = useCallback(callback => callback(props.token), []);
-    if (props.token === null || typeof props.token === undefined) {
-      return null;
-    }
-    useEffect(() => {
-      console.log("TEMP: Token changed: ", props.token);
-    }, props.token)
-    return (
-      <WebPlaybackSDK initialDeviceName="Auxio Player" getOAuthToken={getOAuthToken} volume={0.5} connectOnInitialized={false}>
-        <Player token={props.token}/>
-      </WebPlaybackSDK>
-    )
-  }
+  // const [token, setToken] = useState(null);
 
   // prop func sent down to set new mode in both state and local storage
   const toggleMode = (newMode) => {
@@ -62,13 +46,6 @@ function App() {
       console.log(msg.message);
       toggleMode(msg.message);
     });
-
-    ipcRenderer.send("getSpotifyToken");
-
-    ipcRenderer.on("getSpotifyToken:return", (e, data) => {
-      console.log("Token received: " + data.token)
-      setToken(data.token);
-    })
 
     ipcRenderer.on("session:leave", () => {
       navigate("/connect");
@@ -92,6 +69,7 @@ function App() {
           href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Source+Sans+Pro:wght@400;600;700&display=fallback"
           rel="stylesheet"
         />
+        <script async src="https://sdk.scdn.co/spotify-player.js"/>
       </Helmet>
       <TransitionGroup component={null}>
         <CSSTransition key={location.key} classNames="fade" timeout={300}>
@@ -99,7 +77,7 @@ function App() {
             <Route exact path="/" element={<Welcome />} />
             {/* <Route exact path="/" element={<Queue />} /> */}
             <Route exact path="/connect" element={<Connect />} />
-            <Route exact path="/player" element={<div>{token !== null ? <Temp token={token}/> : null}</div>}/>
+            <Route exact path="/player" element={<Player/>}/>
             <Route exact path="/join" element={<Join />} />
             <Route exact path="/host" element={<HostPanel />} />
             <Route exact path="/volume" element={<Volume />} />

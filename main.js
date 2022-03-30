@@ -15,6 +15,8 @@ const {curSong} = require("./session.js");
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
+app.commandLine.appendSwitch('no-verify-widevine-cdm');
+
 // Keep a reference for dev mode
 let dev = false;
 
@@ -48,7 +50,8 @@ function createMainWindow() {
     icon: `${__dirname}/src/assets/images/logo.png`,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
+      plugins: true
     }
   })
 
@@ -99,6 +102,7 @@ function createMainWindow() {
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
   await components.whenReady();
+
   createMainWindow();
   const mainScreen = screen.getPrimaryDisplay;
   const monitorWidth = mainScreen().size.width;
