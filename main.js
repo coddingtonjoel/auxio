@@ -1,5 +1,5 @@
 // Import parts of electron to use
-const { app, BrowserWindow, ipcMain, screen, components } = require('electron')
+const { app, BrowserWindow, ipcMain, screen, components, shell } = require('electron')
 const path = require('path')
 const url = require('url')
 const AppMenu = require("./AppMenu");
@@ -10,15 +10,20 @@ const {Database} = require("./api/firebase.js");
 const {SpotifyCred} = require("./api/spotify");
 const {timeStruct} = require("./session.js");
 const {curSong} = require("./session.js");
+const express = require('express');
+const http = require('http');
+const exp = express();
+const { Server } = require("socket.io");
+
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
-app.commandLine.appendSwitch('no-verify-widevine-cdm');
-
 // Keep a reference for dev mode
 let dev = false;
+let io;
+let volume = 50;
 
 // Broken:
 // if (process.defaultApp || /[\\/]electron-prebuilt[\\/]/.test(process.execPath) || /[\\/]electron[\\/]/.test(process.execPath)) {
@@ -29,6 +34,14 @@ let dev = false;
 
 if (process.env.NODE_ENV !== undefined && process.env.NODE_ENV === 'development') {
   dev = true;
+}
+
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient('electron-fiddle', process.execPath, [path.resolve(process.argv[1])])
+  }
+} else {
+  app.setAsDefaultProtocolClient('electron-fiddle')
 }
 
 // Temporary fix broken high-dpi scale factor on Windows (125% scaling)
@@ -101,7 +114,25 @@ function createMainWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  await components.whenReady();
+  const server = http.createServer(exp);
+  io = new Server(server);
+
+  // send html file to client, hosted on localhost:3000
+  exp.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+  });
+
+  // on connection, refresh the html client's token
+  io.on("connection", () => {
+    // it takes a second or two to fetch the access token, so add brief timeout
+    setTimeout(() => {
+      io.emit("token", {token: SpotifyCred.accessT});
+    }, 1500)
+  })
+  
+  server.listen(3000, () => {
+    console.log('listening on *:3000');
+  });
 
   createMainWindow();
   const mainScreen = screen.getPrimaryDisplay;
@@ -130,6 +161,9 @@ app.on('ready', async () => {
     }
   });
 
+  ipcMain.once("windowSize:player", () => {
+    require('electron').shell.openExternal("http://localhost:3000");
+  })
   // resize mainWindow to welcome/connect size
   ipcMain.on("windowSize:welcome", () => {
     mainWindow.setSize(900, 600, true);
@@ -179,10 +213,17 @@ app.on('ready', async () => {
     console.log(mainWindow.theme);
   })
 
-  ipcMain.on("getSpotifyToken", (e) => {
+  ipcMain.on("getSpotifyToken", () => {
     // console.log("sending token");
     // console.log(SpotifyCred.accessT);
-    mainWindow.webContents.send("getSpotifyToken:return", {token: SpotifyCred.accessT});
+    mainWindow.webContents.send("getSpotifyToken:return", {token: SpotifyCred.accessT});  
+  })
+
+  // send spotify token to http client
+  ipcMain.once("getSpotifyToken", () => {
+    setTimeout(() => {
+      io.emit("token", {token: SpotifyCred.accessT});
+    }, 1500)
   })
 
   // window openers/closers for frontend use
@@ -191,7 +232,7 @@ app.on('ready', async () => {
   })
 
   ipcMain.on("open:volume", () => {
-    WindowsModule.createVolumeWindow(mainWindow, monitorWidth);
+    WindowsModule.createVolumeWindow(mainWindow, monitorWidth, volume);
   })
 
   ipcMain.on("open:queue", () => {
@@ -210,6 +251,11 @@ app.on('ready', async () => {
     SpotifyCred.search(data.query).then((res) => {
       e.sender.send("search:res", {res})
     });
+  })
+
+  ipcMain.on("volume:change", (e, data) => {
+    volume = data.volume;
+    io.emit("volume:change", {volume: data.volume})
   })
 
   ipcMain.on("queue:add", (e, data) => {
@@ -234,9 +280,22 @@ app.on('ready', async () => {
     Session.changeQueue(data.queue);
   })
 
+  ipcMain.on("pause", () => {
+    io.emit("pause");
+  })
+
+  ipcMain.on("unpause", () => {
+    io.emit("unpause");
+  })
+
+  ipcMain.on("search:start", () => {
+    mainWindow.webContents.send("search:start");
+  })
+
   ipcMain.on("currentSong:change", (e, data) => {
     let globalTime = new Date();
     let tempTime = new timeStruct;
+    console.log(data);
 
     tempTime.whereUpdated = data.newTime;
     tempTime.whenUpdated = Math.round(globalTime.getTime() / 1000); //gets time in seconds since January 1, 1970
@@ -245,6 +304,16 @@ app.on('ready', async () => {
     song.time = tempTime;
     song.curr = data.song;
     Session.changeCurrentSong(song);
+
+    mainWindow.webContents.send("unpause");
+
+    if (data.newTime === 0) {
+      io.emit("songEvent", {type: "start", song: data.song, newTime: 0});
+    }
+    else {
+      io.emit("songEvent", {type: "seek", song: data.song, newTime: data.newTime * 1000});
+    }
+    
 
     // band-aid solution; this should be changed to send back the new song time from the session ideally
     if (data.newTime === 0) {
@@ -265,6 +334,7 @@ app.on('window-all-closed', () => {
 app.on("before-quit", () => {
   // if session host quits the app, end the session
   Session.deleteSession();
+  io.emit("exit");
 })
 
 app.on('activate', () => {

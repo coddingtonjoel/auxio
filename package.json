@@ -41,6 +41,7 @@
     "electron-window-position": "^1.0.1",
     "electron-winstaller": "^5.0.0",
     "express": "^4.17.2",
+    "node-static": "^0.7.11",
     "react": "^17.0.2",
     "react-auth-code-input": "^3.0.0",
     "react-dom": "^17.0.2",
@@ -51,6 +52,8 @@
     "react-spinner-material": "^1.4.0",
     "react-spotify-web-playback-sdk": "^3.0.1",
     "react-transition-group": "^4.4.2",
+    "socket.io": "^4.4.1",
+    "socket.io-client": "^4.4.1",
     "sortablejs": "^1.15.0",
     "spotify-web-api-node": "^5.0.2",
     "styled-components": "^5.3.3"

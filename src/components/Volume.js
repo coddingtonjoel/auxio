@@ -3,13 +3,24 @@ import styled from 'styled-components';
 import Slider from "@mui/material/Slider";
 import volumeDown from "../assets/icons/volume-down.svg";
 import volumeUp from "../assets/icons/volume-up.svg";
+import { ipcRenderer } from 'electron';
 
 const Volume = () => {
   const [volume, setVolume] = useState(50);
 
   useEffect(() => {
-    // TODO, set initial volume here? maybe based on previous app usage? this could be a stored value on the system
-  }, [])
+    
+  }, [volume])
+
+  useEffect(() => {
+    ipcRenderer.once("volume:fetch", (e, data) => {
+      setVolume(data.volume);
+    })
+  })
+
+  const sendVolume = (val) => {
+    ipcRenderer.send("volume:change", {volume: val});
+  }
 
   return (
     <Wrapper>
@@ -22,7 +33,8 @@ const Volume = () => {
             max={100}
             aria-label="Small"
             valueLabelDisplay="off"
-            onChange={(_, val) => setVolume(val)}
+            onChange={(_, val) => {setVolume(val)}}
+            onChangeCommitted={(_, val) =>  {sendVolume(val)}}
             // MUI slider style overrides
             sx={{
               color: "#fff",

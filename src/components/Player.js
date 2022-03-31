@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useCallback } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import styled, { useTheme } from "styled-components";
 import { ipcRenderer } from "electron";
 import roomPreferences from "../assets/icons/room-preferences.svg";
@@ -28,6 +28,7 @@ const Player = (props) => {
   const theme = useTheme();
   const isMount = useIsMount();
   const [ID, setID] = useContext(SessionContext);
+  const [pause, setPause] = useState(true);
 
   // default blank song
   // TODO eventually make this screen a helper for selecting a song from Search rather than showing blank info?
@@ -60,30 +61,10 @@ const Player = (props) => {
   const [token, setToken] = useState(undefined);
   const [current_track, setTrack] = useState(track);
   const [slider, setSlider] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const [deviceID, setDeviceID] = useState(undefined);
   let isHost = true;
-
-  const play = ({
-    spotify_uri,
-    playerInstance: {
-      _options: {
-        getOAuthToken
-      }
-    }
-  }) => {
-    getOAuthToken(access_token => {
-      fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceID}`, {
-        method: 'PUT',
-        body: JSON.stringify({ uris: [spotify_uri] }),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${access_token}`
-        },
-      });
-    });
-  };
 
   // const changeDeviceSong = (song) => {
   //   player.togglePlay();
@@ -108,6 +89,11 @@ const Player = (props) => {
       setSong(data.song);
     });
 
+    // song was started from the search menu
+    ipcRenderer.on("search:start", () => {
+      setPause(false);
+    })
+
     ipcRenderer.on("session:leave", () => {
       // try {
       //   if (spotifyPlayer !== null) {
@@ -118,69 +104,24 @@ const Player = (props) => {
       //   console.log(err);
       // }
     })
+
+    ipcRenderer.on("unpause", () => {
+      setPause(false);
+    })
   }, []);
 
-  useEffect(() => {
-    if (token) {
-      // ############################
-    // ## SPOTIFY WEB PLAYER SDK ##
-    // ############################
-
-    // add spotify player sdk script
-    const script = document.createElement("script");
-    script.src = "https://sdk.scdn.co/spotify-player.js";
-    script.async = true;
-
-    document.body.appendChild(script);
-
-    try {
-      window.onSpotifyWebPlaybackSDKReady = () => {
-        const player = new window.Spotify.Player({
-            name: 'Auxio Player',
-            getOAuthToken: cb => { cb(token); },
-            volume: 0.5
-        });
-        setPlayer(player);
-        player.addListener('ready', ({ device_id }) => {
-            console.log('Ready with Device ID', device_id);
-            setDeviceID(device_id);
-            setLoading(false);
-        });
-        player.addListener('not_ready', ({ device_id }) => {
-            console.log('Device ID has gone offline', device_id);
-        });
-        player.connect();
-      };
-
-      player.addListener('player_state_changed', ( state => {
-        if (!state) {
-            return;
-        }
-        setTrack(state.track_window.current_track);
-        setPaused(state.paused);
-        player.getCurrentState().then( state => { 
-            (!state)? setActive(false) : setActive(true) 
-        });
-      }));
-    }
-   catch(err) {console.log(err)}}
-  }, [token])
-
-  useEffect(() => {
-    // if song isn't the placeholder
-    if (song.uri !== null && player !== undefined) {
-      // spotifyPlayer.connect();
-      // console.log(spotifyPlayer);
-      // console.log(song.uri);
-      // console.log(props.token)
-      // changeDeviceSong(song); 
-      // setTrack()
-      play({
-        playerInstance: player,
-        spotify_uri: song.uri
-      })
-    }
-  }, [song])
+  // useEffect(() => {
+  //   let interval;
+  //   if (!pause) {
+  //     interval = setInterval(() => {
+  //       console.log(slider);
+  //       setSlider(slider + 1);
+  //     }, 1000);
+  //   }
+  //   else {
+  //     clearInterval(interval)
+  //   }
+  // }, [pause])
 
   useEffect(() => {
     if (song.uri !== null) {
@@ -227,6 +168,16 @@ const Player = (props) => {
 
   const handleNewSongPos = (e, val) => {
     setSongPos(val);
+  }
+
+  const handlePause = () => {
+    setPause(!pause);
+    if (!pause) {
+      ipcRenderer.send("pause");
+    }
+    else {
+      ipcRenderer.send("unpause");
+    }
   }
     
   return (
@@ -289,16 +240,12 @@ const Player = (props) => {
                 </p>
               </div>
               <div className="song-controls">
-                {/* <button disabled={spotifyPlayer === null}> */}
                 <button>
                   <img draggable={false} src={prevIcon} alt="Previous" />
                 </button>
-                {/* conditionally change icon based on isPlaying state */}
-                {/* <button disabled={spotifyPlayer === null}> */}
-                <button>
-                  <img draggable={false} src={playIcon} alt="Play" />
+                <button onClick={handlePause}>
+                  <img draggable={false} src={pause ? playIcon : pauseIcon} alt="Pause/Play" />
                 </button>
-                {/* <button disabled={spotifyPlayer === null}> */}
                 <button>
                   <img draggable={false} src={nextIcon} alt="Next" />
                 </button>
