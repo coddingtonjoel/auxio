@@ -129,7 +129,14 @@ app.on('ready', async () => {
       io.emit("token", {token: SpotifyCred.accessT});
     }, 1500)
 
+    // on song progress (every ~1s)
     socket.on("progress", (data) => {
+      // if the song is finished
+      if (Math.round(data.progress) >= Math.round(data.totalLength) && Session.queue[0].id !== "") {
+        io.emit("changeSong", {newSong: Session.queue[0], token: SpotifyCred.accessT});
+        Session.nextSong();
+      }
+      // otherwise, just update the slider on the frontend
       mainWindow.webContents.send("slider:update", {progress: Math.floor(data.progress)});
     })
   })
@@ -174,7 +181,7 @@ app.on('ready', async () => {
   })
 
   ipcMain.on("createSession", () => {
-      const id = Session.createSession();
+      const id = Session.createSession(mainWindow);
       mainWindow.webContents.send("createSession:success", {id});
   })
 
@@ -184,7 +191,7 @@ app.on('ready', async () => {
   })
 
   ipcMain.on("joinSession", (e, data) => {
-    Session.joinSession(data.id).then(res => {
+    Session.joinSession(data.id, mainWindow, io).then(res => {
       if (res) {
         mainWindow.webContents.send("joinSession:success");
       }
@@ -299,7 +306,6 @@ app.on('ready', async () => {
   ipcMain.on("currentSong:change", (e, data) => {
     let globalTime = new Date();
     let tempTime = new timeStruct;
-    console.log(data);
 
     tempTime.whereUpdated = data.newTime;
     tempTime.whenUpdated = Math.round(globalTime.getTime() / 1000); //gets time in seconds since January 1, 1970
@@ -325,6 +331,8 @@ app.on('ready', async () => {
     }
   })
 })
+
+
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {

@@ -1,5 +1,5 @@
 const {Database} = require("./api/firebase.js");
-const {songStruct} = require("./api/spotify.js")
+const {songStruct, SpotifyCred} = require("./api/spotify.js")
 
 
 function generateSesId(){
@@ -52,7 +52,7 @@ class Session {
     static songListener = null;
     static host = false;
 
-    static joinSession(id){  
+    static joinSession(id, mainWindow, io){  
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
             Session.queueListener = Database.getData("Server/" + id + "/queue", (snapshot) => {
@@ -64,6 +64,12 @@ class Session {
                     Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => { // chain calls for both listeners
                         try{
                             snapshot.val().curr; //use a basic call to see if it is valid
+                            setTimeout(() => {
+                                if (Session.currentSong.curr.id !== "") {
+                                    mainWindow.webContents.send("player:change", {song: Session.currentSong.curr});
+                                    io.emit("songEvent", {type: "start", song: Session.currentSong.curr, newTime: 0, token: SpotifyCred.accessT});
+                                }
+                            }, 250);
                             Session.sId = id;
                             Session.currentSong = snapshot.val();
                             //console.log(Session.currentSong)
@@ -171,7 +177,7 @@ class Session {
         return Session.host;
     }
 
-    static createSession(){
+    static createSession(mainWindow){
         Session.host = true;
         Session.sId = generateSesId();
         //Session.sId =  "TES-TSE-RVER";
@@ -192,6 +198,11 @@ class Session {
         Session.songListener = Database.getData("Server/" + Session.sId + "/currentSong", (snapshot) => { //listener for current song information
             if(snapshot.exists()) {
                 Session.currentSong = snapshot.val();
+                setTimeout(() => {
+                    if (Session.currentSong.curr.id !== "") {
+                        mainWindow.webContents.send("player:change", {song: Session.currentSong.curr});
+                    }
+                }, 250);
             } else {
                 //console.log("Server does not exist");
             }

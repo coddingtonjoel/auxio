@@ -31,6 +31,15 @@
     const spotify = new SpotifyPlayer("Auxio Player", 0.5);
 
     socket.on("songEvent", (data) => {
+      if (!authorized) {
+          try {
+              spotify.connect(data.token).then(() => {
+                console.log("Now authorized!")
+                authorized = true;
+              });
+          }
+          catch(err) { console.log(err) };
+      }
       console.log(authorized);
       console.log(data.type);
       console.log("Ready: ", spotify.ready);
@@ -40,7 +49,7 @@
           setTimeout(() => {
             setInterval(() => {
                 spotify.getPlaybackState().then((res) => {                    
-                    socket.emit("progress", {progress: res.progress_ms / 1000});
+                    socket.emit("progress", {progress: res.progress_ms / 1000, totalLength: res.item.duration_ms / 1000, id: res.item.id});
                 });
             }, 1000)
           }, 1000)
@@ -52,6 +61,12 @@
         // force a token get req?
       }
     });
+
+    socket.on("changeSong", (data) => {
+        console.log(data.token);
+        console.log(data.newSong);
+        spotify.play(data.newSong.uri);
+    })
 
     socket.on("volume:change", (data) => {
       spotify.setVolume(data.volume);
