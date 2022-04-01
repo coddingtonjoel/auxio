@@ -81,6 +81,11 @@ const Player = (props) => {
       setToken(data.token);
     })
 
+    ipcRenderer.on("slider:update", (e, data) => {
+      console.log(data.progress);
+      setSlider(data.progress);
+    })
+
     ipcRenderer.on("getID:return", (e, data) => {
       setID(data.id);
     })

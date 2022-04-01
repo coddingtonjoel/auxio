@@ -1,74 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="#">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="#" />
     <title>Auxio Player</title>
-</head>
-<body>
-    <p>Keep this window open (but feel free to minimize it) if you want to listen to music in your current session.</p>
+  </head>
+  <body>
     <p>Auxio's Spotify player is being powered here!</p>
-</body>
-<script type="importmap">
+    <p>
+      Keep this window open (but feel free to minimize it) if you want to listen
+      to music in your current session.
+    </p>
+  </body>
+  <script type="importmap">
     {
       "imports": {
         "socket.io-client": "https://cdn.socket.io/4.4.1/socket.io.esm.min.js",
         "SpotifyPlayer": "https://esm.sh/spotify-web-playback"
       }
     }
-</script>
-<script type="module">
-  import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
-  import SpotifyPlayer from 'https://esm.sh/spotify-web-playback';
-  const socket = io();
-  let authorized = false;
-  const spotify = new SpotifyPlayer("Auxio Player", 0.5);
-  
-  socket.on("songEvent", (data) => {
-    console.log(authorized);
-    console.log(data.type)
-    console.log("Ready: ", spotify.ready);
-    if (authorized) {
+  </script>
+  <script type="module">
+    // ex uri: spotify:track:2KnuaZYoGzDoHiBTNYOTXG
+    import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
+    import SpotifyPlayer from "https://esm.sh/spotify-web-playback";
+    const socket = io();
+    let authorized = false;
+    const spotify = new SpotifyPlayer("Auxio Player", 0.5);
+
+    socket.on("songEvent", (data) => {
+      console.log(authorized);
+      console.log(data.type);
+      console.log("Ready: ", spotify.ready);
+      if (authorized && spotify.ready) {
         if (data.type === "start") {
-            spotify.play(data.song.uri);
-            setTimeout(() => {
-                console.log(spotify.playing);
-                spotify.getPlaybackState().then(res => console.log(res))
-            }, 2000)
+          spotify.play(data.song.uri);
+          setTimeout(() => {
+            setInterval(() => {
+                spotify.getPlaybackState().then((res) => {                    
+                    socket.emit("progress", {progress: res.progress_ms / 1000});
+                });
+            }, 1000)
+          }, 1000)
+        } else if (data.type === "seek") {
+          spotify.seek(data.newTime);
         }
-        else if (data.type === "seek") {
-            console.log(data.newTime)
-            spotify.seek(data.newTime);
-        }
-    }
-    else {
-        console.log("Authorization failed")
+      } else {
+        console.log("Authorization failed");
         // force a token get req?
-    }
-  })
+      }
+    });
 
-  socket.on("volume:change", (data) => {
+    socket.on("volume:change", (data) => {
       spotify.setVolume(data.volume);
-  })
+    });
 
-  socket.on("pause", () => {
+    socket.on("pause", () => {
       spotify.pause();
-  })
+    });
 
-  socket.on("unpause", () => {
+    socket.on("unpause", () => {
       spotify.play();
-  });
+    });
 
-  socket.on("exit", () => document.location.reload());
+    socket.on("exit", () => document.location.reload());
 
-  socket.on("token", (data) => {
-    const token = data.token;
-    console.log(token);
-    spotify.connect(token).then(() => {
+    socket.on("token", (data) => {
+      const token = data.token;
+      console.log(token);
+      spotify.connect(token).then(() => {
+        console.log("Now authorized!")
         authorized = true;
-    })
-  })
-</script>
+      });
+    });
+  </script>
 </html>
+

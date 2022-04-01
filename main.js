@@ -123,11 +123,15 @@ app.on('ready', async () => {
   });
 
   // on connection, refresh the html client's token
-  io.on("connection", () => {
+  io.on("connection", (socket) => {
     // it takes a second or two to fetch the access token, so add brief timeout
     setTimeout(() => {
       io.emit("token", {token: SpotifyCred.accessT});
     }, 1500)
+
+    socket.on("progress", (data) => {
+      mainWindow.webContents.send("slider:update", {progress: Math.floor(data.progress)});
+    })
   })
   
   server.listen(3000, () => {
