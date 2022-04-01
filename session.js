@@ -55,30 +55,28 @@ class Session {
     static joinSession(id){  
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
-            let verified = [false, false];
             Session.queueListener = Database.getData("Server/" + id + "/queue", (snapshot) => {
-                if(snapshot.exists()) {
+                try {
+                    snapshot.val()[0]; //use a basic call to see if it is valid
                     Session.sId = id;
                     Session.queue = snapshot.val();
                     //console.log(Session.queue)
-                    verified[0] = true;
-                } else {
-                    //console.log("Server does not exist1");
+                    Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => { // chain calls for both listeners
+                        try{
+                            snapshot.val().curr; //use a basic call to see if it is valid
+                            Session.sId = id;
+                            Session.currentSong = snapshot.val();
+                            //console.log(Session.currentSong)
+                            res(true);
+                        }catch(error){
+                            res(false);
+                        } 
+                    });
+                } catch (error) {
                     res(false);
                 }
             });
-            Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => {
-                if(snapshot.exists()) {
-                    Session.sId = id;
-                    Session.currentSong = snapshot.val();
-                    //console.log(Session.currentSong)
-                    verified[1] = true;
-                } else {
-                    //console.log("Server does not exist2");
-                    res(false);
-                }
-            });
-            res((verified[0] && verified[1])); //If both worked, it would be true && true
+            
         })
         return sessionPromise;
     }
