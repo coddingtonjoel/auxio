@@ -60,19 +60,21 @@ class Session {
                 if(snapshot.exists()) {
                     Session.sId = id;
                     Session.queue = snapshot.val();
+                    //console.log(Session.queue)
                     verified[0] = true;
                 } else {
-                    //console.log("Server does not exist");
+                    //console.log("Server does not exist1");
                     res(false);
                 }
             });
             Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => {
                 if(snapshot.exists()) {
                     Session.sId = id;
-                    Session.queue = snapshot.val();
+                    Session.currentSong = snapshot.val();
+                    //console.log(Session.currentSong)
                     verified[1] = true;
                 } else {
-                    //console.log("Server does not exist");
+                    //console.log("Server does not exist2");
                     res(false);
                 }
             });
