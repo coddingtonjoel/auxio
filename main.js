@@ -172,9 +172,6 @@ app.on('ready', async () => {
     }
   });
 
-  ipcMain.once("windowSize:player", () => {
-    require('electron').shell.openExternal("http://localhost:3000");
-  })
   // resize mainWindow to welcome/connect size
   ipcMain.on("windowSize:welcome", () => {
     mainWindow.setSize(900, 600, true);
@@ -212,6 +209,15 @@ app.on('ready', async () => {
     //console.log(mess); //for debugging or seeing error codes
   })
 
+  ipcMain.once("open:browser", () => {
+    // make the window stay in front of the opened browser, but only prioritize its z-index for 3 seconds
+    mainWindow.setAlwaysOnTop(true);
+    require('electron').shell.openExternal("http://localhost:3000");
+    setTimeout(() => {
+      mainWindow.setAlwaysOnTop(false);
+    }, 3000)
+  })
+
   ipcMain.on("setTheme", () => {
     // send color scheme event to all open windows
     if (mainWindow.theme === "Light") {
@@ -224,17 +230,17 @@ app.on('ready', async () => {
     console.log(mainWindow.theme);
   })
 
-  ipcMain.on("getSpotifyToken", () => {
-    // console.log("sending token");
-    // console.log(SpotifyCred.accessT);
-    mainWindow.webContents.send("getSpotifyToken:return", {token: SpotifyCred.accessT});  
-  })
+  // ipcMain.on("getSpotifyToken", () => {
+  //   // console.log("sending token");
+  //   // console.log(SpotifyCred.accessT);
+  //   mainWindow.webContents.send("getSpotifyToken:return", {token: SpotifyCred.accessT});  
+  // })
 
   // send spotify token to http client
   ipcMain.once("getSpotifyToken", () => {
     setTimeout(() => {
       io.emit("token", {token: SpotifyCred.accessT});
-    }, 1500)
+    }, 1000)
   })
 
   // window openers/closers for frontend use

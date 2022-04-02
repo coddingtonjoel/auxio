@@ -32,6 +32,7 @@
 
     socket.on("songEvent", (data) => {
       if (!authorized) {
+          console.log("Token at time of auth:", data.token)
           try {
               spotify.connect(data.token).then(() => {
                 console.log("Now authorized!")

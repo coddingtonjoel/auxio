@@ -15,11 +15,15 @@ const Connect = () => {
   }
 
   useEffect(() => {
+    ipcRenderer.send("open:browser");
+
+    ipcRenderer.send("getSpotifyToken");
+
     ipcRenderer.on("createSession:success", (e, data) => {
       setID(data.id);
       navigate("/player");
     })
-  })
+  }, [])
 
   return (
     <Wrapper>

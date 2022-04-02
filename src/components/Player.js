@@ -13,8 +13,6 @@ import prevIcon from "../assets/icons/previous.svg";
 import nextIcon from "../assets/icons/skip.svg";
 import Slider from "@mui/material/Slider";
 import { SessionContext } from "../SessionContext";
-import Spinner from 'react-spinner-material';
-import { useIsMount } from "./useIsMount";
 
 // turn song from seconds into minutes
 const formatDuration = (value) => {
@@ -26,7 +24,6 @@ const formatDuration = (value) => {
 const Player = (props) => {
   
   const theme = useTheme();
-  const isMount = useIsMount();
   const [ID, setID] = useContext(SessionContext);
   const [pause, setPause] = useState(true);
 
@@ -42,28 +39,8 @@ const Player = (props) => {
     length: 0
   });
 
-  const track = {
-    name: "",
-    album: {
-        images: [
-            { url: "" }
-        ]
-    },
-    artists: [
-        { name: "" }
-    ]
-}
-
   const [songPos, setSongPos] = useState(0);
-  const [player, setPlayer] = useState(undefined);
-  const [is_paused, setPaused] = useState(false);
-  const [is_active, setActive] = useState(false);
-  const [token, setToken] = useState(undefined);
-  const [current_track, setTrack] = useState(track);
   const [slider, setSlider] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [volume, setVolume] = useState(0.5);
-  const [deviceID, setDeviceID] = useState(undefined);
   let isHost = true;
 
   // const changeDeviceSong = (song) => {
@@ -73,13 +50,6 @@ const Player = (props) => {
   useEffect(() => {
     ipcRenderer.send("windowSize:player");
     ipcRenderer.send("getID");
-
-    ipcRenderer.send("getSpotifyToken");
-
-    ipcRenderer.once("getSpotifyToken:return", (e, data) => {
-      console.log("Token received: " + data.token)
-      setToken(data.token);
-    })
 
     ipcRenderer.on("slider:update", (e, data) => {
       console.log(data.progress);
@@ -100,14 +70,8 @@ const Player = (props) => {
     })
 
     ipcRenderer.on("session:leave", () => {
-      // try {
-      //   if (spotifyPlayer !== null) {
-      //     spotifyPlayer.disconnect();
-      //   }
-      // }
-      // catch(err) {
-      //   console.log(err);
-      // }
+      // stop playback
+      ipcRenderer.send("pause");
     })
 
     ipcRenderer.on("unpause", () => {
@@ -115,45 +79,11 @@ const Player = (props) => {
     })
   }, []);
 
-  // useEffect(() => {
-  //   let interval;
-  //   if (!pause) {
-  //     interval = setInterval(() => {
-  //       console.log(slider);
-  //       setSlider(slider + 1);
-  //     }, 1000);
-  //   }
-  //   else {
-  //     clearInterval(interval)
-  //   }
-  // }, [pause])
-
   useEffect(() => {
     if (song.uri !== null) {
       ipcRenderer.send("currentSong:change", {song, newTime: songPos});
     }
   }, [songPos]);
-
-  // include React context for sessionDetails upon connecting to a session. Upon leaving, clear that context
-  // Context is needed because Join.js and Player.js both use it and they're sibling components
-  /* sessionDetails context obj:
-    {
-      sessionID: "SES-SION-CODE",
-      isHost: false 
-      currentSong: {
-        // set default title, artist, and album to "-----" while loading?
-        title: ...
-        artist: ...
-        album: ...
-        albumArt: "",
-        isPlaying: true,
-        songLength: "4:22",
-        placeInSong: "2:45",
-        liked: false,
-        disliked: false
-      }
-    }
-  */
 
   const handleVolumeOpener = () => {
     ipcRenderer.send("open:volume");
@@ -187,8 +117,6 @@ const Player = (props) => {
     
   return (
     <Wrapper>
-     
-      {loading ? <div className="loader"><Spinner className="spinner" radius={50} stroke={4} visible color={theme.primary}/></div> : null}
       <span className="session-id">{ID}</span>
       <div className="control-buttons">
         {/* host panel is only available as a session host */}
