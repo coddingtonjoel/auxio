@@ -172,6 +172,17 @@ app.on('ready', async () => {
     }
   });
 
+  ipcMain.on("player:skip", () => {
+    if (Session.queue[0].id !== "") {
+      io.emit("changeSong", {newSong: Session.queue[0], token: SpotifyCred.accessT});
+      Session.nextSong();
+    }
+  })
+
+  ipcMain.on("player:previous", () => {
+    io.emit("songEvent", {type: "seek", song: Session.currentSong.curr, newTime: 0});
+  })
+
   // resize mainWindow to welcome/connect size
   ipcMain.on("windowSize:welcome", () => {
     mainWindow.setSize(900, 600, true);

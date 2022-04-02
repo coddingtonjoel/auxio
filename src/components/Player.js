@@ -52,7 +52,6 @@ const Player = (props) => {
     ipcRenderer.send("getID");
 
     ipcRenderer.on("slider:update", (e, data) => {
-      console.log(data.progress);
       setSlider(data.progress);
     })
 
@@ -114,6 +113,14 @@ const Player = (props) => {
       ipcRenderer.send("unpause");
     }
   }
+
+  const handleBackButton = () => {
+    ipcRenderer.send("player:previous");
+  }
+
+  const handleForwardButton = () => {
+    ipcRenderer.send("player:skip");
+  }
     
   return (
     <Wrapper>
@@ -173,13 +180,13 @@ const Player = (props) => {
                 </p>
               </div>
               <div className="song-controls">
-                <button>
+                <button onClick={handleBackButton}>
                   <img draggable={false} src={prevIcon} alt="Previous" />
                 </button>
                 <button onClick={handlePause}>
                   <img draggable={false} src={pause ? playIcon : pauseIcon} alt="Pause/Play" />
                 </button>
-                <button>
+                <button onClick={handleForwardButton}>
                   <img draggable={false} src={nextIcon} alt="Next" />
                 </button>
               </div>
