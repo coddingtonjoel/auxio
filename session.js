@@ -55,40 +55,42 @@ class Session {
     static joinSession(id, mainWindow, io){  
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
-            Session.queueListener = Database.getData("Server/" + id + "/queue", (snapshot) => {
-                try {
-                    snapshot.val()[0]; //use a basic call to see if it is valid
-                    Session.sId = id;
-                    Session.queue = snapshot.val();
-                    //console.log(Session.queue)
-                    Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => { // chain calls for both listeners
-                        try{
-                            snapshot.val().curr; //use a basic call to see if it is valid
+            Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => { // chain calls for both listeners
+                try{
+                    snapshot.val().curr; //use a basic call to see if it is valid
+                    setTimeout(() => {
+                        if (Session.currentSong.curr.id !== "") {
+                            let globalTime = new Date();
+                            
+                            let offset =  Math.round(globalTime.getTime() / 1000) - snapshot.val().time.whenUpdated + snapshot.val().time.whereUpdated; //gets time in seconds since January 1, 1970
+                            //console.log(offset)
+                            mainWindow.webContents.send("player:change", {song: Session.currentSong.curr});
+                            io.emit("songEvent", {type: "start", song: Session.currentSong.curr, token: SpotifyCred.accessT});
                             setTimeout(() => {
-                                if (Session.currentSong.curr.id !== "") {
-                                    let globalTime = new Date();
-                                    
-                                    let offset =  Math.round(globalTime.getTime() / 1000) - snapshot.val().time.whenUpdated + snapshot.val().time.whereUpdated; //gets time in seconds since January 1, 1970
-                                    //console.log(offset)
-                                    mainWindow.webContents.send("player:change", {song: Session.currentSong.curr});
-                                    io.emit("songEvent", {type: "start", song: Session.currentSong.curr, token: SpotifyCred.accessT});
-                                    setTimeout(() => {
-                                        io.emit("songEvent", {type: "seek", song: Session.currentSong.curr, newTime: offset * 1000 + 300});
-                                    }, 300)
-                                }
-                            }, 250);
+                                io.emit("songEvent", {type: "seek", song: Session.currentSong.curr, newTime: offset * 1000 + 300});
+                            }, 300)
+                        }
+                    }, 250);
+                    Session.sId = id;
+                    Session.currentSong = snapshot.val();
+                    //console.log(Session.currentSong)
+                    Session.queueListener = Database.getData("Server/" + id + "/queue", (snapshot) => {
+                        try {
+                            snapshot.val()[0]; //use a basic call to see if it is valid
                             Session.sId = id;
-                            Session.currentSong = snapshot.val();
-                            //console.log(Session.currentSong)
-                            res(true);
-                        }catch(error){
+                            Session.queue = snapshot.val();
+                            //console.log(Session.queue)
+                            res(true)
+                        } catch (error) {
                             res(false);
-                        } 
+                        }
                     });
-                } catch (error) {
+                }catch(error){
                     res(false);
-                }
+                } 
             });
+
+            
             
         })
         return sessionPromise;
@@ -97,6 +99,10 @@ class Session {
 
     static nextSong(){
         Session.currentSong.curr = Session.queue[0]; //Set the current song to the first one on the queue
+        let globalTime = new Date();
+        Session.currentSong.time.whereUpdated = 0;
+        Session.currentSong.time.whenUpdated = Math.round(globalTime.getTime() / 1000); //gets time in seconds since January 1, 1970
+
         Session.queue.splice(0, 1);
         if (Session.queue.length == 0){ //If the queue is now empty, replace it with an empty queue
             Session.clearQueue();
