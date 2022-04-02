@@ -66,8 +66,15 @@ class Session {
                             snapshot.val().curr; //use a basic call to see if it is valid
                             setTimeout(() => {
                                 if (Session.currentSong.curr.id !== "") {
+                                    let globalTime = new Date();
+                                    
+                                    let offset =  Math.round(globalTime.getTime() / 1000) - snapshot.val().time.whenUpdated + snapshot.val().time.whereUpdated; //gets time in seconds since January 1, 1970
+                                    //console.log(offset)
                                     mainWindow.webContents.send("player:change", {song: Session.currentSong.curr});
-                                    io.emit("songEvent", {type: "start", song: Session.currentSong.curr, newTime: 0, token: SpotifyCred.accessT});
+                                    io.emit("songEvent", {type: "start", song: Session.currentSong.curr, token: SpotifyCred.accessT});
+                                    setTimeout(() => {
+                                        io.emit("songEvent", {type: "seek", song: Session.currentSong.curr, newTime: offset * 1000 + 300});
+                                    }, 300)
                                 }
                             }, 250);
                             Session.sId = id;
