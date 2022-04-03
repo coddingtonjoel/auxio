@@ -324,24 +324,31 @@ app.on('ready', async () => {
     let globalTime = new Date();
     let tempTime = new timeStruct;
 
+
     tempTime.whereUpdated = data.newTime;
     tempTime.whenUpdated = Math.round(globalTime.getTime() / 1000); //gets time in seconds since January 1, 1970
-
+    tempTime.isPaused = false;//data.pause;
+    //console.log(data.pause)
     let song = new curSong;
     song.time = tempTime;
     song.curr = data.song;
+    //console.log(song)
+
     Session.changeCurrentSong(song);
 
     mainWindow.webContents.send("unpause");
-
-    if (data.newTime === 0) {
-      io.emit("songEvent", {type: "start", song: data.song, newTime: 0});
+    if(data.pause){
+      io.emit("pause")
     }
-    else {
-      io.emit("songEvent", {type: "seek", song: data.song, newTime: data.newTime * 1000});
+    else{
+      io.emit("unpause")
+      if (data.newTime === 0) {
+        io.emit("songEvent", {type: "start", song: data.song, newTime: 0});
+      }
+      else {
+        io.emit("songEvent", {type: "seek", song: data.song, newTime: data.newTime * 1000});
+      }
     }
-    
-
     // band-aid solution; this should be changed to send back the new song time from the session ideally
     if (data.newTime === 0) {
       mainWindow.webContents.send("player:change", {song: data.song});

@@ -16,6 +16,7 @@ function generateSesId(){
 class timeStruct {
     static whenUpdated;
     static whereUpdated;
+    static isPaused;
 }
 
 class curSong {
@@ -37,6 +38,7 @@ let emptyTime = new timeStruct;
 
 emptyTime.whenUpdated = 0;
 emptyTime.whereUpdated = 0;
+emptyTime.isPaused = false;
 
 emptyCurrent.curr = empty;
 emptyCurrent.time = emptyTime;
@@ -67,8 +69,15 @@ class Session {
                             mainWindow.webContents.send("player:change", {song: Session.currentSong.curr});
                             io.emit("songEvent", {type: "start", song: Session.currentSong.curr, token: SpotifyCred.accessT});
                             setTimeout(() => {
-                                io.emit("songEvent", {type: "seek", song: Session.currentSong.curr, newTime: offset * 1000 + 300});
-                            }, 300)
+                                io.emit("songEvent", {type: "seek", song: Session.currentSong.curr, newTime: offset * 1000 + 1000});
+                               // if(snapshot.val().time.isPaused){
+                                //    io.emit("pause")
+                                //}
+                                //else {
+                                 //   io.emit("unpause")
+                                //}
+                            }, 1000)
+                            
                         }
                     }, 250);
                     Session.sId = id;
@@ -147,9 +156,11 @@ class Session {
     }
 
     static changeCurrentSong(song) {
+        //console.log(song);
         Session.currentSong = song;
         Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
     }
+
 
     static queueSong(song){
         if (Session.queue[0].album == ""){ //If the first song is a filler song, clear it and then push the new song on top

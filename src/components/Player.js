@@ -80,9 +80,15 @@ const Player = (props) => {
 
   useEffect(() => {
     if (song.uri !== null) {
-      ipcRenderer.send("currentSong:change", {song, newTime: songPos});
+      console.log(pause)
+      ipcRenderer.send("currentSong:change", {song, newTime: songPos, pause: false});
     }
   }, [songPos]);
+
+  useEffect(() => {
+    console.log(pause)
+    //ipcRenderer.send("currentSong:change", {song, newTime: songPos, pause});
+  }, [pause])
 
   const handleVolumeOpener = () => {
     ipcRenderer.send("open:volume");
