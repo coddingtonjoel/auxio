@@ -54,6 +54,8 @@ class Session {
     static songListener = null;
     static host = false;
 
+    static joinedMid = true;
+
     static joinSession(id, mainWindow, io){  
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
@@ -74,7 +76,27 @@ class Session {
                     snapshot.val().curr;
                     // -----------------------------------------------------------------------------
                     
-                    if(snapshot.val().time.whereUpdated == 0) //new song started playing
+                    if(joinedMid)
+                    {
+                        if(snapshot.val().time.whereUpdated())
+                        io.emit("songEvent", {type: "start", song: snapshot.val().curr, token: SpotifyCred.accessT}); //start playing current song
+                        //handle moving song position and pausing
+                        setTimeout(() => {
+                            if(snapshot.val().time.isPaused)
+                            {
+                                io.emit("pause"); //pause then move, prevents skipping sounds
+                                io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset + 1000});
+                            }
+                            else
+                            {
+                                io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset + 1000});
+                                io.emit("unpause"); //move then unpause, prevents skipping sounds
+                            }
+                            mainWindow.webContents.send("player:change", {song: Session.currentSong.curr}); //update player
+                        }, 1000);
+                        joinedMid = false;
+                    }
+                    else if(snapshot.val().time.whereUpdated == 0) //new song started playing
                     {
                         io.emit("songEvent", {type: "start", song: snapshot.val().curr, token: SpotifyCred.accessT}); //play song with credential
                         mainWindow.webContents.send("player:change", {song: Session.currentSong.curr}); //update player
@@ -259,6 +281,7 @@ class Session {
 
     static createSession(mainWindow, io){
         Session.host = true;
+        Session.joinedMid = false;
         Session.sId = generateSesId();
         //Session.sId =  "TES-TSE-RVER";
         Session.queue.push(empty);
@@ -300,11 +323,13 @@ class Session {
 
     static leaveSession() {
 
-        if(Session.sId != "")
-            io.emit("pause"); //pause then move, prevents skipping sounds
+        //if(Session.sId != "")
+            //io.emit("pause"); //pause then move, prevents skipping sounds
         Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
         Database.removeListener("Server/" + Session.sId + "/currentSong"); //stop listening to the server
         
+        Session.joinedMid = true;
+
         if(Session.host && Session.sId != "") { //close the server if host    
             Database.deleteData("Server/" + Session.sId);
             Session.sId = "";
