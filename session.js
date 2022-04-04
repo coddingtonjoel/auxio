@@ -76,25 +76,31 @@ class Session {
                     snapshot.val().curr;
                     // -----------------------------------------------------------------------------
                     
-                    if(joinedMid)
+                    if(Session.joinedMid)
                     {
-                        if(snapshot.val().time.whereUpdated())
-                        io.emit("songEvent", {type: "start", song: snapshot.val().curr, token: SpotifyCred.accessT}); //start playing current song
-                        //handle moving song position and pausing
-                        setTimeout(() => {
-                            if(snapshot.val().time.isPaused)
-                            {
-                                io.emit("pause"); //pause then move, prevents skipping sounds
-                                io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset + 1000});
-                            }
-                            else
-                            {
-                                io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset + 1000});
-                                io.emit("unpause"); //move then unpause, prevents skipping sounds
-                            }
-                            mainWindow.webContents.send("player:change", {song: Session.currentSong.curr}); //update player
-                        }, 1000);
-                        joinedMid = false;
+                        if(snapshot.val().time.whereUpdated != 0)
+                        {
+                            io.emit("songEvent", {type: "start", song: snapshot.val().curr, token: SpotifyCred.accessT}); //start playing current song
+                            //handle moving song position and pausing
+                            setTimeout(() => {
+                                //find correct song position
+                                let globalTime = new Date();
+                                //offset is lastKnownPosition + (timeSinceLastUpdate)
+                                let offset =  Math.round(globalTime.getTime()) - snapshot.val().time.whenUpdated + snapshot.val().time.whereUpdated;
+                                if(snapshot.val().time.isPaused)
+                                {
+                                    io.emit("pause"); //pause then move, prevents skipping sounds
+                                    io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset + 1000});
+                                }
+                                else
+                                {
+                                    io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset + 1000});
+                                    io.emit("unpause"); //move then unpause, prevents skipping sounds
+                                }
+                                mainWindow.webContents.send("player:change", {song: Session.currentSong.curr}); //update player
+                            }, 1000);
+                        }
+                        Session.joinedMid = false;
                     }
                     else if(snapshot.val().time.whereUpdated == 0) //new song started playing
                     {
@@ -323,8 +329,8 @@ class Session {
 
     static leaveSession() {
 
-        //if(Session.sId != "")
-            //io.emit("pause"); //pause then move, prevents skipping sounds
+        if(Session.sId != "" && typeof(io) != "undefined")
+            io.emit("pause"); //pause then move, prevents skipping sounds
         Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
         Database.removeListener("Server/" + Session.sId + "/currentSong"); //stop listening to the server
         
