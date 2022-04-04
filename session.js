@@ -57,60 +57,119 @@ class Session {
     static joinSession(id, mainWindow, io){  
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
+
+            Session.sId = id; 
             Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => { // chain calls for both listeners
-                try{
-                    snapshot.val().curr; //use a basic call to see if it is valid
-                    setTimeout(() => {
-                        if (Session.currentSong.curr.id !== "") {
-                            let globalTime = new Date();
-                            
-                            let offset =  Math.round(globalTime.getTime() / 1000) - snapshot.val().time.whenUpdated + snapshot.val().time.whereUpdated; //gets time in seconds since January 1, 1970
-                            //console.log(offset)
-                            mainWindow.webContents.send("player:change", {song: Session.currentSong.curr});
-                            io.emit("songEvent", {type: "start", song: Session.currentSong.curr, token: SpotifyCred.accessT});
-                            setTimeout(() => {
-                                io.emit("songEvent", {type: "seek", song: Session.currentSong.curr, newTime: offset * 1000 + 1000});
-                               // if(snapshot.val().time.isPaused){
-                                //    io.emit("pause")
-                                //}
-                                //else {
-                                 //   io.emit("unpause")
-                                //}
-                            }, 1000)
-                            
+                try {
+                    
+                    if(snapshot.val() === null) //server must have been closed / deleted, exit and remove listener
+                    {
+                        console.log("Server Shutdown!");
+                        io.emit("pause"); //to prevent song continue playing after returning to main screen
+                        Session.leaveSession(); //remove listeners
+                        mainWindow.webContents.send("session:leave", {}) //leave the session and return to main screen.
+                    }
+
+                    // !!!!! Important: use a basic call to see if it is valid, if not, catch occurs
+                    snapshot.val().curr;
+                    // -----------------------------------------------------------------------------
+                    
+                    if(snapshot.val().time.whereUpdated == 0) //new song started playing
+                    {
+                        io.emit("songEvent", {type: "start", song: snapshot.val().curr, token: SpotifyCred.accessT}); //play song with credential
+                        mainWindow.webContents.send("player:change", {song: Session.currentSong.curr}); //update player
+                    }
+                    else //time changing, not a new song
+                    {
+                        //find correct song position
+                        let globalTime = new Date();
+                        //offset is lastKnownPosition + (timeSinceLastUpdate)
+                        let offset =  Math.round(globalTime.getTime()) - snapshot.val().time.whenUpdated + snapshot.val().time.whereUpdated;
+                        if(snapshot.val().time.isPaused)
+                            offset = snapshot.val().time.whereUpdated; //offest is the same if the player is paused
+
+                        //handle moving song position and pausing
+                        if(snapshot.val().time.isPaused)
+                        {
+                            io.emit("pause"); //pause then move, prevents skipping sounds
+                            io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset});
                         }
-                    }, 250);
-                    Session.sId = id;
-                    Session.currentSong = snapshot.val();
-                    //console.log(Session.currentSong)
-                    Session.queueListener = Database.getData("Server/" + id + "/queue", (snapshot) => {
-                        try {
-                            snapshot.val()[0]; //use a basic call to see if it is valid
-                            Session.sId = id;
-                            Session.queue = snapshot.val();
-                            //console.log(Session.queue)
-                            res(true)
-                        } catch (error) {
-                            res(false);
+                        else
+                        {
+                            io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset});
+                            io.emit("unpause"); //move then unpause, prevents skipping sounds
                         }
-                    });
-                }catch(error){
+                    }
+                    Session.currentSong = snapshot.val(); //update all data fields
+
+                } catch(error){
+                    console.log("error", error);
                     res(false);
                 } 
             });
-
+            
+            Session.queueListener = Database.getData("Server/" + id + "/queue", (snapshot) => {
+                try {
+                    snapshot.val()[0]; //use a basic call to see if it is valid, catch if not
+                    Session.sId = id;
+                    Session.queue = snapshot.val();
+                    //console.log(Session.queue)
+                    res(true)
+                } catch (error) {
+                    res(false);
+                }
+            });
             
             
         })
         return sessionPromise;
     }
 
+    static getSongPosition()
+    {
+        let globalTime = new Date();
+        if(Session.currentSong.time.isPaused)
+            return Session.currentSong.time.whereUpdated;
+        else //current position is lastUpdatePosition + (timeSinceLastUpdate)
+            return Session.currentSong.time.whereUpdated + (Math.round(globalTime.getTime()) - Session.currentSong.time.whenUpdated);
+    }
+
+    static pause()
+    {
+        let globalTime = new Date();
+        //where location must be last known position + time elapsed since last move.
+        Session.currentSong.time.whereUpdated = Math.round(globalTime.getTime()) - Session.currentSong.time.whenUpdated + Session.currentSong.time.whereUpdated;
+        Session.currentSong.time.whenUpdated = Math.round(globalTime.getTime()); //current time
+        Session.currentSong.time.isPaused = true;
+        Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong}); //update
+    }
+
+    static unpause()
+    {
+        let globalTime = new Date();
+        //where position should be fine as is.
+        Session.currentSong.time.whenUpdated = Math.round(globalTime.getTime()); //current time
+        Session.currentSong.time.isPaused = false;
+        Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong}); //update
+    }
+
+    static resetSongPosition() //used for previous button, just reset position to 0
+    {
+        let globalTime = new Date();
+        //where location must be last known position + time elapsed since last move.
+        Session.currentSong.time.whereUpdated = 0; //at the start
+        Session.currentSong.time.whenUpdated = Math.round(globalTime.getTime()); //current time
+        Session.currentSong.time.isPaused = false; //unpause
+        Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong}); //update
+    }
+
 
     static nextSong(){
         Session.currentSong.curr = Session.queue[0]; //Set the current song to the first one on the queue
         let globalTime = new Date();
-        Session.currentSong.time.whereUpdated = 0;
-        Session.currentSong.time.whenUpdated = Math.round(globalTime.getTime() / 1000); //gets time in seconds since January 1, 1970
+        Session.currentSong.time.whereUpdated = 0; //at the start
+        Session.currentSong.time.whenUpdated = Math.round(globalTime.getTime()); //current time
+        Session.currentSong.time.isPaused = false; //unpause
 
         Session.queue.splice(0, 1);
         if (Session.queue.length == 0){ //If the queue is now empty, replace it with an empty queue
@@ -144,20 +203,16 @@ class Session {
     static getId() {
         return Session.sId;
     }
-    
-    static leaveSession(){
-        if(!Session.host){
-            Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening
-            Database.removeListener("Server/" + Session.sId + "/currentSong"); //stop listening to the server
-            Session.queue = []; //reset queues and id
-            Session.sId = "";
-            Session.currentSong = empty;
-        }
-    }
 
-    static changeCurrentSong(song) {
+    static changeCurrentSong(song, position, pause) {
         //console.log(song);
-        Session.currentSong = song;
+        let globalTime = new Date();
+
+        Session.currentSong.curr = song;
+        Session.currentSong.time.whereUpdated = position;
+        Session.currentSong.time.whenUpdated = Math.round(globalTime.getTime()); //current time
+        Session.currentSong.time.isPaused = pause;
+
         Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
     }
 
@@ -201,7 +256,7 @@ class Session {
         return Session.host;
     }
 
-    static createSession(mainWindow){
+    static createSession(mainWindow, io){
         Session.host = true;
         Session.sId = generateSesId();
         //Session.sId =  "TES-TSE-RVER";
@@ -210,6 +265,8 @@ class Session {
 
         Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
 
+        Session.joinSession(Session.sId, mainWindow, io); //set up song and queue listeners
+        /*
         Session.queueListener = Database.getData("Server/" + Session.sId + "/queue", (snapshot) => { //listener to queue information
             if(snapshot.exists()) {
                 Session.queue = snapshot.val();
@@ -232,20 +289,22 @@ class Session {
             }
 
         });
+        */
+
         return Session.sId;
         //Database.createData("Server/" + Session.sId, { "queue" : ["test2"]});
         //Send id to firebase
 
     }
 
-    static deleteSession() {
-        if(Session.host && Session.sId != ""){
-            
+    static leaveSession() {
+
+        Session.pause(); //pause the player
+        Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
+        Database.removeListener("Server/" + Session.sId + "/currentSong"); //stop listening to the server
+        
+        if(Session.host && Session.sId != "") { //close the server if host    
             Database.deleteData("Server/" + Session.sId);
-            Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
-            Database.removeListener("Server/" + Session.sId + "/currentSong"); //stop listening to the server
-           
-            
             Session.sId = "";
             Session.host = false;
             Session.currentSong = empty;

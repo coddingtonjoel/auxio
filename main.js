@@ -14,6 +14,7 @@ const express = require('express');
 const http = require('http');
 const exp = express();
 const { Server } = require("socket.io");
+const { browserSessionPersistence } = require('firebase/auth');
 
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -129,15 +130,32 @@ app.on('ready', async () => {
       io.emit("token", {token: SpotifyCred.accessT});
     }, 1500)
 
-    // on song progress (every ~1s)
-    socket.on("progress", (data) => {
+
+    // on song length, which occurs at the start of a song playing, keep reading position until song ends
+    socket.on("length", (data) => {
       // if the song is finished
-      if (Math.round(data.progress) >= Math.round(data.totalLength) && Session.queue[0].id !== "") {
-        io.emit("changeSong", {newSong: Session.queue[0], token: SpotifyCred.accessT});
-        Session.nextSong();
-      }
-      // otherwise, just update the slider on the frontend
-      mainWindow.webContents.send("slider:update", {progress: Math.floor(data.progress)});
+      let songDur = Session.currentSong.curr.length;
+
+      let lengthWatcher = setInterval(() => 
+      { //update slider every so often  
+        try 
+        {
+          if(songDur == 0) //must not be a song, end listener
+            clearInterval(lengthWatcher); //app may have been closed, kill the listener
+          // stop from throwing an undefined error   
+          let currPos = Session.getSongPosition();
+          if(currPos > songDur && Session.queue[0].id !== "")
+          {
+            Session.nextSong();
+            clearInterval(lengthWatcher); //stop this listener
+          }
+          // update the slider on the frontend
+          mainWindow.webContents.send("slider:update", {progress: Math.min(Math.floor(currPos), songDur)});
+        } catch (error) {
+          clearInterval(lengthWatcher); //app may have been closed, kill the listener
+        }
+      }, 250); //interval in ms
+
     })
   })
   
@@ -174,13 +192,14 @@ app.on('ready', async () => {
 
   ipcMain.on("player:skip", () => {
     if (Session.queue[0].id !== "") {
-      io.emit("changeSong", {newSong: Session.queue[0], token: SpotifyCred.accessT});
+      //io.emit("changeSong", {newSong: Session.queue[0], token: SpotifyCred.accessT}); session.js will handle this.
       Session.nextSong();
     }
   })
 
   ipcMain.on("player:previous", () => {
-    io.emit("songEvent", {type: "seek", song: Session.currentSong.curr, newTime: 0});
+    //io.emit("songEvent", {type: "seek", song: Session.currentSong.curr, newTime: 0});
+    Session.resetSongPosition();
   })
 
   // resize mainWindow to welcome/connect size
@@ -189,7 +208,7 @@ app.on('ready', async () => {
   })
 
   ipcMain.on("createSession", () => {
-      const id = Session.createSession(mainWindow);
+      const id = Session.createSession(mainWindow, io);
       mainWindow.webContents.send("createSession:success", {id});
   })
 
@@ -309,11 +328,11 @@ app.on('ready', async () => {
   })
 
   ipcMain.on("pause", () => {
-    io.emit("pause");
+    Session.pause();
   })
 
   ipcMain.on("unpause", () => {
-    io.emit("unpause");
+    Session.unpause();
   })
 
   ipcMain.on("search:start", () => {
@@ -321,22 +340,9 @@ app.on('ready', async () => {
   })
 
   ipcMain.on("currentSong:change", (e, data) => {
-    let globalTime = new Date();
-    let tempTime = new timeStruct;
-
-
-    tempTime.whereUpdated = data.newTime;
-    tempTime.whenUpdated = Math.round(globalTime.getTime() / 1000); //gets time in seconds since January 1, 1970
-    tempTime.isPaused = false;//data.pause;
-    //console.log(data.pause)
-    let song = new curSong;
-    song.time = tempTime;
-    song.curr = data.song;
-    //console.log(song)
-
-    Session.changeCurrentSong(song);
-
+    Session.changeCurrentSong(data.song, data.newTime, data.pause);
     mainWindow.webContents.send("unpause");
+    /*
     if(data.pause){
       io.emit("pause")
     }
@@ -350,7 +356,8 @@ app.on('ready', async () => {
       }
     }
     // band-aid solution; this should be changed to send back the new song time from the session ideally
-    if (data.newTime === 0) {
+    */
+    if (data.newTime === 0) { //if a new song, update the player
       mainWindow.webContents.send("player:change", {song: data.song});
     }
   })
@@ -369,7 +376,7 @@ app.on('window-all-closed', () => {
 
 app.on("before-quit", () => {
   // if session host quits the app, end the session
-  Session.deleteSession();
+  Session.leaveSession();
   io.emit("exit");
 })
 

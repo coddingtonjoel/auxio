@@ -53,7 +53,7 @@ class SpotifyCred{
  
               curr.albumArt = [item.album.images[0].url,item.album.images[2].url];
               curr.uri = item.uri;
-              curr.length = Math.floor(item.duration_ms / 1000);
+              curr.length = Math.floor(item.duration_ms);
               returnSongs.push(curr);
           }); 
           res(returnSongs);
@@ -86,7 +86,7 @@ class SpotifyCred{
 
           curr.albumArt = [item.track.album.images[0].url,item.track.album.images[2].url]; 
           curr.uri = item.track.uri;
-          curr.length = Math.floor(item.track.duration_ms / 1000);
+          curr.length = Math.floor(item.track.duration_ms);
           returnSongs.push(curr);
         });
         res(returnSongs);

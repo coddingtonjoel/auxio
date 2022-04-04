@@ -47,16 +47,10 @@
       if (authorized && spotify.ready) {
         if (data.type === "start") {
           spotify.play(data.song.uri);
-          setTimeout(() => {
-            setInterval(() => {
-                spotify.getPlaybackState().then((res) => {      
-                    // stop from throwing an undefined error   
-                    if (res.progress_ms && res.item.duration_ms) {
-                        socket.emit("progress", {progress: res.progress_ms / 1000, totalLength: res.item.duration_ms / 1000, id: res.item.id});
-                    }           
-                });
-            }, 1000)
-          }, 1000)
+
+          //notify main of song length
+          socket.emit("length", {mess: "startListening"});
+          
         } else if (data.type === "seek") {
           spotify.seek(data.newTime);
         }

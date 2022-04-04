@@ -68,9 +68,10 @@ const Player = (props) => {
       setPause(false);
     })
 
+    //leave and return to connect screen.
     ipcRenderer.on("session:leave", () => {
       // stop playback
-      ipcRenderer.send("pause");
+      //ipcRenderer.send("pause"); unneeded, session.js will pause the player
     })
 
     ipcRenderer.on("unpause", () => {
@@ -81,7 +82,7 @@ const Player = (props) => {
   useEffect(() => {
     if (song.uri !== null) {
       console.log(pause)
-      ipcRenderer.send("currentSong:change", {song, newTime: songPos, pause: false});
+      ipcRenderer.send("currentSong:change", {song: song, newTime: songPos, pause: pause});
     }
   }, [songPos]);
 
@@ -235,8 +236,8 @@ const Player = (props) => {
                 },
               }}
             />
-            <span className="time-in">{formatDuration(slider)}</span>
-            <span className="time-left">{formatDuration(song.length - slider)}</span>
+            <span className="time-in">{formatDuration(Math.round(slider/1000))}</span>
+            <span className="time-left">{formatDuration(Math.round((song.length - slider)/1000))}</span>
           </div>
       </div>
     </Wrapper>
