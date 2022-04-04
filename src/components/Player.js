@@ -13,6 +13,8 @@ import prevIcon from "../assets/icons/previous.svg";
 import nextIcon from "../assets/icons/skip.svg";
 import Slider from "@mui/material/Slider";
 import { SessionContext } from "../SessionContext";
+import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { Tooltip } from "@mui/material";
 
 // turn song from seconds into minutes
 const formatDuration = (value) => {
@@ -26,6 +28,7 @@ const Player = (props) => {
   const theme = useTheme();
   const [ID, setID] = useContext(SessionContext);
   const [pause, setPause] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   // default blank song
   // TODO eventually make this screen a helper for selecting a song from Search rather than showing blank info?
@@ -128,13 +131,25 @@ const Player = (props) => {
   const handleForwardButton = () => {
     ipcRenderer.send("player:skip");
   }
+
+  // ID without dashes for copying purposes
+  let IDwithoutDashes = ID.replace(/-/g, "");
     
   return (
     <Wrapper>
-      <span className="session-id">{ID}</span>
+        <CopyToClipboard text={ID} onCopy={() => {
+          setCopied(true);
+          setTimeout(() => {
+            setCopied(false);
+          }, 5000)
+          }}>
+        <Tooltip title={copied ? "Copied!" : "Copy to Clipboard"}>
+          <span className="session-id">{ID}</span>
+        </Tooltip>
+        </CopyToClipboard>
       <div className="control-buttons">
         {/* host panel is only available as a session host */}
-        {isHost ? (
+        {/* {isHost ? (
           <button onClick={handleHostPanelOpener}>
             <img
               draggable={false}
@@ -142,7 +157,7 @@ const Player = (props) => {
               alt="Room Preferences"
             />
           </button>
-        ) : null}
+        ) : null} */}
         <button onClick={handleQueueOpener}>
           <img draggable={false} src={queueIcon} alt="Queue" />
         </button>
@@ -283,13 +298,18 @@ const Wrapper = styled.div`
 
   .session-id {
     font-family: "Source Sans Pro";
-    opacity: 0.2;
+    opacity: 0.3;
     font-weight: 700;
     user-select: none;
     position: absolute;
     top: 8px;
     left: 8px;
     font-size: 14px;
+    cursor: pointer;
+  }
+
+  .session-id:active {
+    cursor: default;
   }
 
   .control-buttons {
