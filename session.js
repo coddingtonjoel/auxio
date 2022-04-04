@@ -100,6 +100,7 @@ class Session {
                             io.emit("unpause"); //move then unpause, prevents skipping sounds
                         }
                     }
+
                     Session.currentSong = snapshot.val(); //update all data fields
 
                 } catch(error){
@@ -299,7 +300,8 @@ class Session {
 
     static leaveSession() {
 
-        Session.pause(); //pause the player
+        if(Session.sId != "")
+            Session.pause(); //pause the player
         Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
         Database.removeListener("Server/" + Session.sId + "/currentSong"); //stop listening to the server
         
