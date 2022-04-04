@@ -301,7 +301,7 @@ class Session {
     static leaveSession() {
 
         if(Session.sId != "")
-            Session.pause(); //pause the player
+            io.emit("pause"); //pause then move, prevents skipping sounds
         Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
         Database.removeListener("Server/" + Session.sId + "/currentSong"); //stop listening to the server
         
