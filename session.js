@@ -53,30 +53,37 @@ class Session {
     static queueListener = null; //the listener function to the server id data
     static songListener = null;
     static host = false;
+    static serverConnected = false;
 
     static joinedMid = true;
+    static lastSessionUpdate = empty; //used for song listener syncing
 
+    //todo: unpause when slider moves to beginning / prev button (frontend)
+    //don't unpause when slider position moves elsewhere (frontend)
+    //update pause button when changed on the session (frontend)
+    //test syncing
     static joinSession(id, mainWindow, io){  
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
 
-            Session.sId = id; 
+            Session.sId = id;
             Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => { // chain calls for both listeners
                 try {
                     
-                    if(snapshot.val() === null) //server must have been closed / deleted, exit and remove listener
+                    
+                    if(Session.serverConnected && snapshot.val() === null) //server must have been closed / deleted, exit and remove listener
                     {
                         console.log("Server Shutdown!");
                         io.emit("pause"); //to prevent song continue playing after returning to main screen
                         Session.leaveSession(); //remove listeners
                         mainWindow.webContents.send("session:leave", {}) //leave the session and return to main screen.
                     }
-
                     // !!!!! Important: use a basic call to see if it is valid, if not, catch occurs
                     snapshot.val().curr;
+                    Session.serverConnected = true; //reading data, must be valid server
                     // -----------------------------------------------------------------------------
                     
-                    if(Session.joinedMid)
+                    if(Session.joinedMid) //special case for initial server join
                     {
                         if(snapshot.val().time.whereUpdated != 0)
                         {
@@ -87,52 +94,56 @@ class Session {
                                 let globalTime = new Date();
                                 //offset is lastKnownPosition + (timeSinceLastUpdate)
                                 let offset =  Math.round(globalTime.getTime()) - snapshot.val().time.whenUpdated + snapshot.val().time.whereUpdated;
+                                
                                 if(snapshot.val().time.isPaused)
-                                {
                                     io.emit("pause"); //pause then move, prevents skipping sounds
-                                    io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset + 1000});
-                                }
                                 else
-                                {
-                                    io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset + 1000});
                                     io.emit("unpause"); //move then unpause, prevents skipping sounds
-                                }
-                                mainWindow.webContents.send("player:change", {song: Session.currentSong.curr}); //update player
+                                
+                                io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset + 1000});
+                                
+                                mainWindow.webContents.send("player:change", {song: snapshot.val().curr}); //update player
                             }, 1000);
                         }
                         Session.joinedMid = false;
                     }
-                    else if(snapshot.val().time.whereUpdated == 0) //new song started playing
+                    else //not mid join, normal behavior 
                     {
-                        io.emit("songEvent", {type: "start", song: snapshot.val().curr, token: SpotifyCred.accessT}); //play song with credential
-                        mainWindow.webContents.send("player:change", {song: Session.currentSong.curr}); //update player
-                    }
-                    else //time changing, not a new song
-                    {
-                        //find correct song position
-                        let globalTime = new Date();
-                        //offset is lastKnownPosition + (timeSinceLastUpdate)
-                        let offset =  Math.round(globalTime.getTime()) - snapshot.val().time.whenUpdated + snapshot.val().time.whereUpdated;
-                        if(snapshot.val().time.isPaused)
-                            offset = snapshot.val().time.whereUpdated; //offest is the same if the player is paused
-
-                        //handle moving song position and pausing
-                        if(snapshot.val().time.isPaused)
+                        if(snapshot.val().time.whereUpdated == 0) //new song started playing
                         {
-                            io.emit("pause"); //pause then move, prevents skipping sounds
-                            io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset});
+                            io.emit("songEvent", {type: "start", song: snapshot.val().curr, token: SpotifyCred.accessT}); //play song with credential
+                            mainWindow.webContents.send("player:change", {song: Session.currentSong.curr}); //update player
                         }
-                        else
+                        else //time changing, not a new song
                         {
-                            io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset});
-                            io.emit("unpause"); //move then unpause, prevents skipping sounds
+                            //find correct song position
+                            let globalTime = new Date();
+                            //offset is lastKnownPosition + (timeSinceLastUpdate)
+                            let currTime = Math.round(globalTime.getTime());
+                            let offset =  currTime - snapshot.val().time.whenUpdated + snapshot.val().time.whereUpdated;
+                            let prevOffset = currTime - Session.lastSessionUpdate.time.whenUpdated + Session.lastSessionUpdate.time.whereUpdated;
+                            if(snapshot.val().time.isPaused)
+                                offset = snapshot.val().time.whereUpdated; //offest is the same if the player is paused
+                            
+                            //handle pausing
+                            if(snapshot.val().time.isPaused != Session.lastSessionUpdate.time.isPaused) //only update pause if pause state changed
+                            {
+                                if(snapshot.val().time.isPaused)  
+                                    io.emit("pause");
+                                else
+                                    io.emit("unpause");
+                                //TODO: notify the front end of the pause button state
+                            }
+                                
+                            if(offset != prevOffset) //if update position should be different, then seek
+                                io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset}); //jump to correct position
                         }
                     }
-
                     Session.currentSong = snapshot.val(); //update all data fields
+                    Session.lastSessionUpdate = snapshot.val(); //update last known update
 
                 } catch(error){
-                    console.log("error", error);
+                    //console.log("error", error);
                     res(false);
                 } 
             });
@@ -141,8 +152,7 @@ class Session {
                 try {
                     snapshot.val()[0]; //use a basic call to see if it is valid, catch if not
                     Session.sId = id;
-                    Session.queue = snapshot.val();
-                    //console.log(Session.queue)
+                    Session.queue = snapshot.val(); //update all fields
                     res(true)
                 } catch (error) {
                     res(false);
@@ -288,6 +298,7 @@ class Session {
     static createSession(mainWindow, io){
         Session.host = true;
         Session.joinedMid = false;
+        Session.serverConnected = true;
         Session.sId = generateSesId();
         //Session.sId =  "TES-TSE-RVER";
         Session.queue.push(empty);
@@ -327,8 +338,9 @@ class Session {
 
     }
 
-    static leaveSession() {
-
+    static leaveSession() 
+    {
+        Session.serverConnected = false;
         if(Session.sId != "" && typeof(io) != "undefined")
             io.emit("pause"); //pause then move, prevents skipping sounds
         Database.removeListener("Server/" + Session.sId + "/queue"); //stop listening to the server
