@@ -58,6 +58,12 @@ const Player = (props) => {
       setSlider(data.progress);
     })
 
+    ipcRenderer.on("pauseEvent", (e, data) => {
+      if (pause !== data.isPaused) {
+        setPause(data.isPaused);
+      }
+    })
+
     ipcRenderer.on("getID:return", (e, data) => {
       setID(data.id);
     })
@@ -201,14 +207,15 @@ const Player = (props) => {
                   {song.album}
                 </p>
               </div>
+              {/* disabled if there's no song selected */}
               <div className="song-controls">
-                <button onClick={handleBackButton}>
+                <button disabled={song.title === "..."}  onClick={handleBackButton}>
                   <img draggable={false} src={prevIcon} alt="Previous" />
                 </button>
-                <button onClick={handlePause}>
+                <button disabled={song.title === "..."} onClick={handlePause}>
                   <img draggable={false} src={pause ? playIcon : pauseIcon} alt="Pause/Play" />
                 </button>
-                <button onClick={handleForwardButton}>
+                <button disabled={song.title === "..."} onClick={handleForwardButton}>
                   <img draggable={false} src={nextIcon} alt="Next" />
                 </button>
               </div>
