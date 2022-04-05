@@ -62,6 +62,9 @@ class Session {
     //don't unpause when slider position moves elsewhere (frontend)
     //update pause button when changed on the session (frontend)
     //test syncing
+    //occasional skip end of song
+    //pause/play button refusal
+    //final song finished, can't skip back to the main song.
     static joinSession(id, mainWindow, io){  
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
