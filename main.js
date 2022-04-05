@@ -168,17 +168,6 @@ app.on('ready', async () => {
   const monitorWidth = mainScreen().size.width;
   new AppMenu (dev, mainWindow);
   mainWindow.theme = "Light";
-  // ipcMain listeners go here!
-
-  // ex: listener with data param
-  ipcMain.on("test:withParam", (e, data) => {
-    console.log(data.message);
-  })
-
-  // ex: listener without data param
-  ipcMain.on("test:withoutParam", () => {
-    console.log("This is a message sent via a console.log() in main.js.");
-  })
 
   // resize mainWindow to player size
   ipcMain.on("windowSize:player", () => {

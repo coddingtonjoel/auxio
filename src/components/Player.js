@@ -46,10 +46,6 @@ const Player = (props) => {
   const [slider, setSlider] = useState(0);
   let isHost = true;
 
-  // const changeDeviceSong = (song) => {
-  //   player.togglePlay();
-  // };
-
   useEffect(() => {
     ipcRenderer.send("windowSize:player");
     ipcRenderer.send("getID");
@@ -77,12 +73,6 @@ const Player = (props) => {
     // song was started from the search menu
     ipcRenderer.on("search:start", () => {
       setPause(false);
-    })
-
-    //leave and return to connect screen.
-    ipcRenderer.on("session:leave", () => {
-      // stop playback
-      //ipcRenderer.send("pause"); unneeded, session.js will pause the player
     })
 
     ipcRenderer.on("unpause", () => {

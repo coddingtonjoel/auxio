@@ -4,7 +4,7 @@ const {songStruct, SpotifyCred} = require("./api/spotify.js")
 
 function generateSesId(){
     let result = '';
-    let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; //List of characters to choose from
+    let characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; //List of characters to choose from
     for (let i = 0; i < 10; i++ ) { 
         result += characters.charAt(Math.floor(Math.random() * characters.length)); //Add a random character to result
         if(i == 2 || i == 5) //Add the - at indexes 3 and 6
@@ -66,6 +66,14 @@ class Session {
     //pause/play button refusal
     //final song finished, can't skip back to the main song.
     static joinSession(id, mainWindow, io){  
+        // double check that the screen size is correct
+        if (process.platform === 'darwin') {
+            mainWindow.setSize(650, 460, true);
+        }
+        else {
+            mainWindow.setSize(650, 480, true);
+        }
+        
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
 
@@ -142,7 +150,7 @@ class Session {
                                 io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset}); //jump to correct position
                         }
                     }
-                    //mainWindow.webContents.send("pauseEvent", {isPaused: true});
+                    // mainWindow.webContents.send("pauseEvent", {isPaused: true});
                     Session.currentSong = snapshot.val(); //update all data fields
                     Session.lastSessionUpdate = snapshot.val(); //update last known update
 

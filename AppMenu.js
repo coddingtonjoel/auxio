@@ -72,12 +72,6 @@ class AppMenu extends Menu {
           { type: "separator" },
           { role: "toggledevtools" },
           {
-            label: "Test IPC",
-            click: () => {
-                win.webContents.send("ipcTest");
-            }
-          },
-          {
             label: "createVolumeWindow()",
             click: () => {
                 WindowsModule.createVolumeWindow();
