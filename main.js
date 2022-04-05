@@ -339,26 +339,12 @@ app.on('ready', async () => {
     mainWindow.webContents.send("search:start");
   })
 
+  //every time slider changes (either from new song or by sliding)
   ipcMain.on("currentSong:change", (e, data) => {
     Session.changeCurrentSong(data.song, data.newTime, data.pause);
-    mainWindow.webContents.send("unpause");
-    /*
-    if(data.pause){
-      io.emit("pause")
-    }
-    else{
-      io.emit("unpause")
-      if (data.newTime === 0) {
-        io.emit("songEvent", {type: "start", song: data.song, newTime: 0});
-      }
-      else {
-        io.emit("songEvent", {type: "seek", song: data.song, newTime: data.newTime * 1000});
-      }
-    }
-    // band-aid solution; this should be changed to send back the new song time from the session ideally
-    */
     if (data.newTime === 0) { //if a new song, update the player
       mainWindow.webContents.send("player:change", {song: data.song});
+      mainWindow.webContents.send("unpause");
     }
   })
 })

@@ -142,7 +142,7 @@ class Session {
                                 io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset}); //jump to correct position
                         }
                     }
-                    mainWindow.webContents.send("pauseEvent", {isPaused: snapshot.val().time.isPaused});
+                    //mainWindow.webContents.send("pauseEvent", {isPaused: true});
                     Session.currentSong = snapshot.val(); //update all data fields
                     Session.lastSessionUpdate = snapshot.val(); //update last known update
 
