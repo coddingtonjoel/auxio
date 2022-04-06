@@ -27,7 +27,7 @@ const Player = (props) => {
   
   const theme = useTheme();
   const [ID, setID] = useContext(SessionContext);
-  const [pause, setPause] = useState(true);
+  const [pause, setPause] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // default blank song
@@ -55,11 +55,7 @@ const Player = (props) => {
     })
 
     ipcRenderer.on("pauseEvent", (e, data) => {
-      console.log("paused:");
-      if (pause !== data.isPaused) {
-        setPause(data.isPaused);
-        console.log(data.isPaused);
-      }
+      setPause(data.isPaused);
     })
 
     ipcRenderer.on("getID:return", (e, data) => {
@@ -74,23 +70,13 @@ const Player = (props) => {
     ipcRenderer.on("search:start", () => {
       setPause(false);
     })
-
-    ipcRenderer.on("unpause", () => {
-      setPause(false);
-    })
   }, []);
 
   useEffect(() => {
     if (song.uri !== null) {
-      console.log(pause)
       ipcRenderer.send("currentSong:change", {song: song, newTime: songPos, pause: pause});
     }
   }, [songPos]);
-
-  useEffect(() => {
-    console.log(pause)
-    //ipcRenderer.send("currentSong:change", {song, newTime: songPos, pause});
-  }, [pause])
 
   const handleVolumeOpener = () => {
     ipcRenderer.send("open:volume");
@@ -113,7 +99,6 @@ const Player = (props) => {
   }
 
   const handlePause = () => {
-    setPause(!pause);
     if (!pause) {
       ipcRenderer.send("pause");
     }
@@ -135,7 +120,7 @@ const Player = (props) => {
     
   return (
     <Wrapper>
-        <CopyToClipboard text={ID} onCopy={() => {
+        <CopyToClipboard text={IDwithoutDashes} onCopy={() => {
           setCopied(true);
           setTimeout(() => {
             setCopied(false);

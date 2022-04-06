@@ -68,7 +68,7 @@ class Session {
         Session.sliderTimer = null; //reset
     }
 
-    static beginSliderTimer()
+    static beginSliderTimer(mainWindow)
     {
         Session.sliderTimer = setInterval(() => 
         { //update slider every so often  
@@ -80,8 +80,7 @@ class Session {
                 let currPos = Session.getSongPosition();
                 if(currPos > songDur && Session.queue[0].id !== "" && Session.isHost) //the host will be able to command everyone to skip to the next song
                     Session.nextSong();
-
-                console.log("update slider", currPos);
+                // console.log("update slider", currPos);
                 mainWindow.webContents.send("slider:update", {progress: Math.min(Math.floor(currPos), songDur)});
             }
         } catch (error) {
@@ -109,7 +108,7 @@ class Session {
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
 
-            Session.beginSliderTimer();
+            Session.beginSliderTimer(mainWindow);
 
             Session.sId = id;
             Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => { // chain calls for both listeners
@@ -173,10 +172,17 @@ class Session {
                             //handle pausing
                             if(snapshot.val().time.isPaused != Session.lastSessionUpdate.time.isPaused) //only update pause if pause state changed
                             {
-                                if(snapshot.val().time.isPaused)  
+                                console.log("pause place")
+                                if(snapshot.val().time.isPaused) {
                                     io.emit("pause");
-                                else
+                                    console.log("sending mainwindow pause")
+                                    mainWindow.webContents.send("pauseEvent", {isPaused: true});
+                                }
+                                else {
                                     io.emit("unpause");
+                                    console.log("sending mainwindow unpause")
+                                    mainWindow.webContents.send("pauseEvent", {isPaused: false});
+                                }
                                 //TODO: notify the front end of the pause button state
                             }
                                 
@@ -184,7 +190,6 @@ class Session {
                                 io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset}); //jump to correct position
                         }
                     }
-                    // mainWindow.webContents.send("pauseEvent", {isPaused: true});
                     Session.currentSong = snapshot.val(); //update all data fields
                     Session.lastSessionUpdate = snapshot.val(); //update last known update
 
@@ -238,13 +243,14 @@ class Session {
         Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong}); //update
     }
 
-    static resetSongPosition() //used for previous button, just reset position to 0
+    static resetSongPosition(mainWindow) //used for previous button, just reset position to 0
     {
         let globalTime = new Date();
         //where location must be last known position + time elapsed since last move.
         Session.currentSong.time.whereUpdated = 0; //at the start
         Session.currentSong.time.whenUpdated = Math.round(globalTime.getTime()); //current time
         Session.currentSong.time.isPaused = false; //unpause
+        mainWindow.webContents.send("pauseEvent", {isPaused: false});
         Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong}); //update
     }
 
@@ -289,7 +295,7 @@ class Session {
         return Session.sId;
     }
 
-    static changeCurrentSong(song, position, pause) {
+    static changeCurrentSong(song, position, pause, mainWindow) {
         //console.log(song);
         let globalTime = new Date();
 
@@ -297,6 +303,12 @@ class Session {
         Session.currentSong.time.whereUpdated = position;
         Session.currentSong.time.whenUpdated = Math.round(globalTime.getTime()); //current time
         Session.currentSong.time.isPaused = pause;
+
+        if (position === 0) {
+            Session.currentSong.time.isPaused = false;
+            mainWindow.webContents.send("pauseEvent", {isPaused: false});
+
+        }
 
         Database.createData("Server/" + Session.sId, { "queue" : Session.queue, "currentSong" : Session.currentSong});
     }

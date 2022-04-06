@@ -160,7 +160,7 @@ app.on('ready', async () => {
 
   ipcMain.on("player:previous", () => {
     //io.emit("songEvent", {type: "seek", song: Session.currentSong.curr, newTime: 0});
-    Session.resetSongPosition();
+    Session.resetSongPosition(mainWindow);
   })
 
   // resize mainWindow to welcome/connect size
@@ -220,12 +220,6 @@ app.on('ready', async () => {
     else mainWindow.theme = "Light";
     console.log(mainWindow.theme);
   })
-
-  // ipcMain.on("getSpotifyToken", () => {
-  //   // console.log("sending token");
-  //   // console.log(SpotifyCred.accessT);
-  //   mainWindow.webContents.send("getSpotifyToken:return", {token: SpotifyCred.accessT});  
-  // })
 
   // send spotify token to http client
   ipcMain.once("getSpotifyToken", () => {
@@ -302,11 +296,11 @@ app.on('ready', async () => {
 
   //every time slider changes (either from new song or by sliding)
   ipcMain.on("currentSong:change", (e, data) => {
-    Session.changeCurrentSong(data.song, data.newTime, data.pause);
-    if (data.newTime === 0) { //if a new song, update the player
-      mainWindow.webContents.send("player:change", {song: data.song});
-      mainWindow.webContents.send("unpause");
-    }
+    Session.changeCurrentSong(data.song, data.newTime, data.pause, mainWindow);
+    // if (data.newTime === 0) { //if a new song, update the player
+    //   mainWindow.webContents.send("player:change", {song: data.song});
+    //   mainWindow.webContents.send("unpause");
+    // }
   })
 })
 
@@ -336,7 +330,6 @@ app.on('activate', () => {
 })
 
 function authSpotify(){
-  //console.log("Success!");
   mainWindow.webContents.send("auth:spotify");
 }
 
