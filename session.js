@@ -58,6 +58,38 @@ class Session {
     static joinedMid = true;
     static lastSessionUpdate = empty; //used for song listener syncing
 
+    static sliderTimer = null; //tracks the song position
+
+
+    static stopSliderTimer()
+    {
+        if(Session.sliderTimer !== null)   
+            clearInterval(Session.sliderTimer.sliderTimer);
+        Session.sliderTimer = null; //reset
+    }
+
+    static beginSliderTimer()
+    {
+        Session.sliderTimer = setInterval(() => 
+        { //update slider every so often  
+        try 
+        {
+            let songDur = Session.currentSong.curr.length;
+            if(songDur != 0) //song is playing
+            {
+                let currPos = Session.getSongPosition();
+                if(currPos > songDur && Session.queue[0].id !== "" && Session.isHost) //the host will be able to command everyone to skip to the next song
+                    Session.nextSong();
+
+                console.log("update slider", currPos);
+                mainWindow.webContents.send("slider:update", {progress: Math.min(Math.floor(currPos), songDur)});
+            }
+        } catch (error) {
+          //do nothing
+        }
+      }, 1000); //interval in ms
+    }
+
     //todo: unpause when slider moves to beginning / prev button (frontend)
     //don't unpause when slider position moves elsewhere (frontend)
     //update pause button when changed on the session (frontend)
@@ -76,6 +108,8 @@ class Session {
         
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
+
+            Session.beginSliderTimer();
 
             Session.sId = id;
             Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => { // chain calls for both listeners
@@ -352,6 +386,7 @@ class Session {
 
     static leaveSession() 
     {
+        Session.stopSliderTimer(); //stop slider
         Session.serverConnected = false;
         if(Session.sId != "" && typeof(io) != "undefined")
             io.emit("pause"); //pause then move, prevents skipping sounds
