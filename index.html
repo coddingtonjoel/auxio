@@ -47,10 +47,8 @@
       if (authorized && spotify.ready) {
         if (data.type === "start") {
           spotify.play(data.song.uri);
-
-          //notify main of song length
-          socket.emit("length", {mess: "startListening"});
-          
+          console.log("song playing");
+                    
         } else if (data.type === "seek") {
           spotify.seek(data.newTime);
         }

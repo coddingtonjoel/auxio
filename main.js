@@ -123,52 +123,25 @@ app.on('ready', async () => {
     res.sendFile(__dirname + '/index.html');
   });
 
+  
+  
   // on connection, refresh the html client's token
   io.on("connection", (socket) => {
     // it takes a second or two to fetch the access token, so add brief timeout
     setTimeout(() => {
       io.emit("token", {token: SpotifyCred.accessT});
     }, 1500)
-
-
-    // on song length, which occurs at the start of a song playing, keep reading position until song ends
-    socket.on("length", (data) => {
-      // if the song is finished
-      let songDur = Session.currentSong.curr.length;
-
-      let lengthWatcher = setInterval(() => 
-      { //update slider every so often  
-        try 
-        {
-          if(songDur == 0) //must not be a song, end listener
-            clearInterval(lengthWatcher); //app may have been closed, kill the listener
-          // stop from throwing an undefined error   
-          let currPos = Session.getSongPosition();
-          if(currPos > songDur && Session.queue[0].id !== "")
-          {
-            Session.nextSong();
-            clearInterval(lengthWatcher); //stop this listener
-          }
-          // update the slider on the frontend
-          mainWindow.webContents.send("slider:update", {progress: Math.min(Math.floor(currPos), songDur)});
-        } catch (error) {
-          clearInterval(lengthWatcher); //app may have been closed, kill the listener
-        }
-      }, 250); //interval in ms
-
-    })
   })
   
   server.listen(3000, () => {
     console.log('listening on *:3000');
   });
-
+  
   createMainWindow();
   const mainScreen = screen.getPrimaryDisplay;
   const monitorWidth = mainScreen().size.width;
   new AppMenu (dev, mainWindow);
   mainWindow.theme = "Light";
-  // ipcMain listeners go here!
 
   // ex: listener with data param
   ipcMain.on("test:withParam", (e, data) => {

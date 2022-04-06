@@ -59,10 +59,8 @@ const Player = (props) => {
     })
 
     ipcRenderer.on("pauseEvent", (e, data) => {
-      console.log("paused:");
       if (pause !== data.isPaused) {
         setPause(data.isPaused);
-        console.log(data.isPaused);
       }
     })
 

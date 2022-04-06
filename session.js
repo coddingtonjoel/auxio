@@ -58,6 +58,36 @@ class Session {
     static joinedMid = true;
     static lastSessionUpdate = empty; //used for song listener syncing
 
+    static sliderTimer = null;
+
+
+    static stopSliderTimer()
+    {
+        if(sliderTImer !== null)   
+            clearInterval(sliderTimer);
+        sliderTimer = null; //reset
+    }
+
+    static beginSliderTimer()
+    {
+        sliderTimer = setInterval(() => 
+        { //update slider every so often  
+        try 
+        {
+            let songDur = Session.currentSong.curr.length;
+            if(songDur != 0) //song is playing
+            {
+                let currPos = Session.getSongPosition();
+                if(currPos > songDur && Session.queue[0].id !== "" && Session.isHost) //the host will be able to command everyone to skip to the next song
+                    Session.nextSong();
+                mainWindow.webContents.send("slider:update", {progress: Math.min(Math.floor(currPos))});
+            }
+        } catch (error) {
+          //do nothing
+        }
+      }, 250); //interval in ms
+    }
+
     //todo: unpause when slider moves to beginning / prev button (frontend)
     //don't unpause when slider position moves elsewhere (frontend)
     //update pause button when changed on the session (frontend)
@@ -68,6 +98,7 @@ class Session {
     static joinSession(id, mainWindow, io){  
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
+            Session.beginSliderTimer();
 
             Session.sId = id;
             Session.songListener = Database.getData("Server/" + id + "/currentSong", (snapshot) => { // chain calls for both listeners
@@ -88,7 +119,7 @@ class Session {
                     
                     if(Session.joinedMid) //special case for initial server join
                     {
-                        if(snapshot.val().time.whereUpdated != 0)
+                        if(snapshot.val().curr.id !== "")
                         {
                             io.emit("songEvent", {type: "start", song: snapshot.val().curr, token: SpotifyCred.accessT}); //start playing current song
                             //handle moving song position and pausing
@@ -114,8 +145,9 @@ class Session {
                     {
                         if(snapshot.val().time.whereUpdated == 0) //new song started playing
                         {
-                            io.emit("songEvent", {type: "start", song: snapshot.val().curr, token: SpotifyCred.accessT}); //play song with credential
-                            mainWindow.webContents.send("player:change", {song: Session.currentSong.curr}); //update player
+                            io.emit("songEvent", {type: "start", song: snapshot.val().curr, token: SpotifyCred.accessT}); //start playing current song
+                            console.log("play");
+                            mainWindow.webContents.send("player:change", {song: snapshot.val().currentSong.curr}); //update player
                         }
                         else //time changing, not a new song
                         {
@@ -123,7 +155,7 @@ class Session {
                             let globalTime = new Date();
                             //offset is lastKnownPosition + (timeSinceLastUpdate)
                             let currTime = Math.round(globalTime.getTime());
-                            let offset =  currTime - snapshot.val().time.whenUpdated + snapshot.val().time.whereUpdated;
+                            let offset = currTime - snapshot.val().time.whenUpdated + snapshot.val().time.whereUpdated;
                             let prevOffset = currTime - Session.lastSessionUpdate.time.whenUpdated + Session.lastSessionUpdate.time.whereUpdated;
                             if(snapshot.val().time.isPaused)
                                 offset = snapshot.val().time.whereUpdated; //offest is the same if the player is paused
@@ -142,7 +174,7 @@ class Session {
                                 io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset}); //jump to correct position
                         }
                     }
-                    //mainWindow.webContents.send("pauseEvent", {isPaused: true});
+                    mainWindow.webContents.send("pauseEvent", {isPaused: snapshot.val().curr});
                     Session.currentSong = snapshot.val(); //update all data fields
                     Session.lastSessionUpdate = snapshot.val(); //update last known update
 
@@ -174,7 +206,9 @@ class Session {
         if(Session.currentSong.time.isPaused)
             return Session.currentSong.time.whereUpdated;
         else //current position is lastUpdatePosition + (timeSinceLastUpdate)
+        {
             return Session.currentSong.time.whereUpdated + (Math.round(globalTime.getTime()) - Session.currentSong.time.whenUpdated);
+        }
     }
 
     static pause()
@@ -344,6 +378,7 @@ class Session {
 
     static leaveSession() 
     {
+        Session.stopSliderTimer(); //stop updating slider
         Session.serverConnected = false;
         if(Session.sId != "" && typeof(io) != "undefined")
             io.emit("pause"); //pause then move, prevents skipping sounds
