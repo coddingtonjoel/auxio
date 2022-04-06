@@ -55,10 +55,12 @@ const Player = (props) => {
     ipcRenderer.send("getID");
 
     ipcRenderer.on("slider:update", (e, data) => {
+      console.log("front update", data.progress);
       setSlider(data.progress);
     })
 
     ipcRenderer.on("pauseEvent", (e, data) => {
+      console.log("pause event");
       if (pause !== data.isPaused) {
         setPause(data.isPaused);
       }

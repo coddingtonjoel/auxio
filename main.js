@@ -181,8 +181,8 @@ app.on('ready', async () => {
   })
 
   ipcMain.on("createSession", () => {
-      const id = Session.createSession(mainWindow, io);
-      mainWindow.webContents.send("createSession:success", {id});
+    const id = Session.createSession(mainWindow, io);
+    mainWindow.webContents.send("createSession:success", {id});
   })
 
   ipcMain.on("getID", () => {
@@ -191,9 +191,10 @@ app.on('ready', async () => {
   })
 
   ipcMain.on("joinSession", (e, data) => {
-    Session.joinSession(data.id, mainWindow, io).then(res => {
+    Session.canJoin(data.id, mainWindow, io).then(res => {
       if (res) {
         mainWindow.webContents.send("joinSession:success");
+        Session.joinSession(data,id, mainWindow, io)
       }
       else {
         mainWindow.webContents.send("joinSession:failure");
