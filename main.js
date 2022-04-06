@@ -15,6 +15,7 @@ const http = require('http');
 const exp = express();
 const { Server } = require("socket.io");
 const { browserSessionPersistence } = require('firebase/auth');
+//const { default: Player } = require('./src/components/Player'); //why was this line inserted from nowhere, and why does it crash the app?
 
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -181,8 +182,11 @@ app.on('ready', async () => {
   })
 
   ipcMain.on("createSession", () => {
-    const id = Session.createSession(mainWindow, io);
+    const id = Session.createSessionPre();
     mainWindow.webContents.send("createSession:success", {id});
+    mainWindow.once('did-finish-load', () => {
+      Session.createSession(mainWindow, io);
+    })
   })
 
   ipcMain.on("getID", () => {
@@ -192,14 +196,22 @@ app.on('ready', async () => {
 
   ipcMain.on("joinSession", (e, data) => {
     Session.canJoin(data.id, mainWindow, io).then(res => {
-      if (res) {
+      if (res)
         mainWindow.webContents.send("joinSession:success");
-        Session.joinSession(data,id, mainWindow, io)
-      }
-      else {
+      else
         mainWindow.webContents.send("joinSession:failure");
-      }
     });
+  })
+
+  ipcMain.on("player:loaded", () => { //notified when player is fully loaded. Now session listeners can be created
+    if(!Session.inServer) //only do this if 
+    {
+      console.log("Player Fully Loaded");
+      if(Session.isHost)
+        Session.createSession(mainWindow, io);
+      else 
+        Session.joinSession(mainWindow, io);
+    }
   })
 
   ipcMain.on("login:googleSuccess", (e, cred) => {

@@ -53,6 +53,7 @@ const Player = (props) => {
   useEffect(() => {
     ipcRenderer.send("windowSize:player");
     ipcRenderer.send("getID");
+    ipcRenderer.send("player:loaded"); //this should only happen once?
 
     ipcRenderer.on("slider:update", (e, data) => {
       console.log("front update", data.progress);
@@ -71,6 +72,7 @@ const Player = (props) => {
     })
 
     ipcRenderer.on("player:change", (e, data) => {
+      console.log("player changed");
       setSong(data.song);
     });
 
