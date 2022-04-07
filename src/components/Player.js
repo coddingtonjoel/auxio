@@ -186,13 +186,13 @@ const Player = (props) => {
               </div>
               {/* disabled if there's no song selected */}
               <div className="song-controls">
-                <button disabled={song.title === "..."}  onClick={handleBackButton}>
+                <button disabled={song.title === "..."} className={song.title === "..." ? "disabled" : ""} onClick={handleBackButton}>
                   <img draggable={false} src={prevIcon} alt="Previous" />
                 </button>
-                <button disabled={song.title === "..."} onClick={handlePause}>
+                <button disabled={song.title === "..."} className={song.title === "..." ? "disabled" : ""} onClick={handlePause}>
                   <img draggable={false} src={pause ? playIcon : pauseIcon} alt="Pause/Play" />
                 </button>
-                <button disabled={song.title === "..."} onClick={handleForwardButton}>
+                <button disabled={song.title === "..."} className={song.title === "..." ? "disabled" : ""} onClick={handleForwardButton}>
                   <img draggable={false} src={nextIcon} alt="Next" />
                 </button>
               </div>
@@ -465,6 +465,11 @@ const Wrapper = styled.div`
         top: 20px;
         opacity: 0.7;
       }
+    }
+
+    .disabled {
+      opacity: 0.5;
+      pointer-events: none;
     }
   }
 `;
