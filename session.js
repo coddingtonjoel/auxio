@@ -172,24 +172,23 @@ class Session {
                             //handle pausing
                             if(snapshot.val().time.isPaused != Session.lastSessionUpdate.time.isPaused) //only update pause if pause state changed
                             {
-                                console.log("pause place")
+                                //console.log("pause place")
                                 if(snapshot.val().time.isPaused) {
                                     io.emit("pause");
-                                    console.log("sending mainwindow pause")
-                                    mainWindow.webContents.send("pauseEvent", {isPaused: true});
+                                    //console.log("sending mainwindow pause")
                                 }
                                 else {
                                     io.emit("unpause");
-                                    console.log("sending mainwindow unpause")
-                                    mainWindow.webContents.send("pauseEvent", {isPaused: false});
+                                    //console.log("sending mainwindow unpause")
                                 }
                                 //TODO: notify the front end of the pause button state
                             }
-                                
+                            
                             if(offset != prevOffset) //if update position should be different, then seek
-                                io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset}); //jump to correct position
+                            io.emit("songEvent", {type: "seek", song: snapshot.val().curr, newTime: offset}); //jump to correct position
                         }
                     }
+                    mainWindow.webContents.send("pauseEvent", {isPaused: snapshot.val().time.isPaused}); //sync pausing
                     Session.currentSong = snapshot.val(); //update all data fields
                     Session.lastSessionUpdate = snapshot.val(); //update last known update
 
