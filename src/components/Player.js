@@ -117,6 +117,8 @@ const Player = (props) => {
 
   // ID without dashes for copying purposes
   let IDwithoutDashes = ID.replace(/-/g, "");
+
+  ipcRenderer.send("windowSize:player");
     
   return (
     <Wrapper>

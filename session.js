@@ -97,14 +97,6 @@ class Session {
     //pause/play button refusal
     //final song finished, can't skip back to the main song.
     static joinSession(id, mainWindow, io){  
-        // double check that the screen size is correct
-        if (process.platform === 'darwin') {
-            mainWindow.setSize(650, 460, true);
-        }
-        else {
-            mainWindow.setSize(650, 480, true);
-        }
-        
         const sessionPromise = new Promise((res, rej) => {
             //start listening to the server
 
