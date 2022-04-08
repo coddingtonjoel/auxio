@@ -156,7 +156,7 @@ class Session {
                         if(snapshot.val().time.whereUpdated == 0) //new song started playing
                         {
                             io.emit("songEvent", {type: "start", song: snapshot.val().curr, token: SpotifyCred.accessT}); //play song with credential
-                            mainWindow.webContents.send("player:change", {song: Session.currentSong.curr}); //update player
+                            mainWindow.webContents.send("player:change", {song: snapshot.val().curr}); //update player
                         }
                         else //time changing, not a new song
                         {
