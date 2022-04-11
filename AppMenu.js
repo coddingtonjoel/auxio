@@ -1,5 +1,9 @@
 const { Menu, BrowserWindow } = require("electron");
 const WindowsModule = require("./windows");
+const SpotifyLogin =  require("./api/spotify.js");
+const {Database} = require("./api/firebase.js");
+const {Session} = require("./session.js");
+const {songStruct, SpotifyCred} = require("./api/spotify.js")
 
 const isMac = process.platform === "darwin";
 
@@ -8,7 +12,11 @@ class AppMenu extends Menu {
   constructor(isDev, win) {
     super();
 
-    let template = [];
+    let template = [
+      {
+        role: "editMenu",
+      }
+    ];
 
     if (isMac) {
       template.unshift({
@@ -16,13 +24,26 @@ class AppMenu extends Menu {
       });
     }
 
+    
+
     template.push({
       label: "Preferences",
       submenu: [
         {
           label: "Toggle Light/Dark Mode",
           click: () => {
-              win.webContents.send("colorScheme");
+              // send color scheme event to all open windows
+              if (win.theme === "Light") {
+                win.theme = "Dark";
+              }
+              else if (win.theme === "Dark") {
+                win.theme = "Light";
+              }
+              const windows = BrowserWindow.getAllWindows();
+              windows.forEach((w) => {
+                w.webContents.send("colorScheme", {message: win.theme});
+              })
+
           },
           accelerator: "CmdOrCtrl+P"
         }
@@ -64,7 +85,122 @@ class AppMenu extends Menu {
           {
             label: "createHostPanelWindow()",
             click: () => {
-                WindowsModule.createHostPanelWindow();
+              WindowsModule.createHostPanelWindow();
+            }
+          },
+
+          {
+            label: "FirebaseAuth()", //CALL THIS BEFORE REQUESTING/MODIFYING DATA FROM FIREBASE
+            click: () => {
+              Database.initServer();
+              Database.requestCredentials();
+            }
+          },
+          {
+            label: "DatabaseTestReadOnce()", //CALL THIS BEFORE REQUESTING/MODIFYING DATA FROM FIREBASE
+            click: () => {
+              Database.getDataOnce("userData/user1123581321345589").then((snapshot) => 
+              {
+
+                if (snapshot.exists()) {
+                  console.log(snapshot.val()); //data retrieved
+                } else { //found on database but field is nonexistent
+                  console.log("No data available");
+                }
+
+              }).catch((error) => {
+                console.log("Data not found");
+              });
+            }
+          },
+
+          {
+            label: "DatabaseTestCreate()",
+            click: () => {
+              Database.createData("userData/user1123581321345589",
+                {
+                  "param1": "stringInput",
+                  "param2": 69720375,
+                  "param3": 3.14
+                }
+              );
+            }
+
+          },
+          {
+            label: "DatabaseTestRead()",
+            click: () => {
+              Database.getData("userData/user1123581321345589", (snapshot) => { console.log(snapshot.val()); });
+            }
+          },
+          {
+            label: "DatabaseTestRemoveListener()",
+            click: () => {
+              Database.removeAllListeners("userData/user1123581321345589");
+            }
+          },
+          {
+            label: "DatabaseTestDelete()",
+            click: () => {
+              Database.createData("userData/user1123581321345589", {});
+            }
+          },
+          {
+            label: "createSession",
+            click: () => {
+                Session.createSession();
+                let id = Session.getId();
+                console.log("Created Session With Id:", id); //for debugging or seeing attribute names
+            }
+          },
+          {
+            label: "deleteSession",
+            click: () => {
+                let id = Session.getId();
+                if(id != ""){
+                    Session.deleteSession();
+                    console.log("Deleted Session With Id:", id); //for debugging or seeing attribute names
+                }
+            }
+          },
+          {
+            label: "joinSession",
+            click: () => {
+                Session.joinSession("2FI-ULR-844P");
+                console.log("Joined the session");
+            }
+          },
+          {
+            label: "leaveSession",
+            click: () => {
+                Session.leaveSession();
+                console.log("Left the session");
+            }
+          },
+          {
+            label: "getHostInfo",
+            click: () => {
+                SpotifyCred.getHostPlaylists();
+            }
+          },
+          {
+            label: "queuePlaylist",
+            click: () => {
+              SpotifyCred.getHostPlaylists().then(function(data1){
+                SpotifyCred.getSongsInPlaylist(data1[0].id).then(function(data2) {
+                  data2.forEach(item => { //Get every Artist
+                    Session.queueSong(item);
+                  });
+                });
+              });
+                
+            }
+          },
+          {
+            label: "deleteSong",
+            click: () => {
+                Session.clearQueue();  
+              //Session.deleteSong("test");
             }
           }
         ],
