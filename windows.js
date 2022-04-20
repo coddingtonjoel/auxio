@@ -28,7 +28,7 @@ if (process.platform === 'win32') {
   app.commandLine.appendSwitch('force-device-scale-factor', '1');
 }
 
-function createVolumeWindow(mainWindow, monitorWidth) {
+function createVolumeWindow(mainWindow, monitorWidth, volume) {
   // Create the browser window.
   if (volumeWindow === null) {
     const mainWindowPos = mainWindow.getPosition();
@@ -56,6 +56,7 @@ function createVolumeWindow(mainWindow, monitorWidth) {
   
     // Don't show until we are ready and loaded
     volumeWindow.once('ready-to-show', () => {
+      volumeWindow.webContents.send("volume:fetch", {volume});
       volumeWindow.show()
   
       // Open the DevTools automatically if developing

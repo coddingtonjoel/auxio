@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="#" />
+    <title>Auxio Player</title>
+  </head>
+  <body>
+    <p>Auxio's Spotify player is being powered here!</p>
+    <p>
+      Keep this window open (but feel free to minimize it) if you want to listen
+      to music in your current session.
+    </p>
+  </body>
+  <script type="importmap">
+    {
+      "imports": {
+        "socket.io-client": "https://cdn.socket.io/4.4.1/socket.io.esm.min.js",
+        "SpotifyPlayer": "https://esm.sh/spotify-web-playback"
+      }
+    }
+  </script>
+  <script type="module">
+    // ex uri: spotify:track:2KnuaZYoGzDoHiBTNYOTXG
+    import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
+    import SpotifyPlayer from "https://esm.sh/spotify-web-playback";
+    const socket = io();
+    let authorized = false;
+    const spotify = new SpotifyPlayer("Auxio Player", 0.5);
+
+    socket.on("songEvent", (data) => {
+      if (!authorized) {
+          console.log("Token at time of auth:", data.token)
+          try {
+              spotify.connect(data.token).then(() => {
+                console.log("Now authorized!")
+                authorized = true;
+              });
+          }
+          catch(err) { console.log(err) };
+      }
+      console.log(authorized);
+      console.log(data.type);
+      console.log("Ready: ", spotify.ready);
+      if (authorized && spotify.ready) {
+        if (data.type === "start") {
+          spotify.play(data.song.uri);
+          
+        } else if (data.type === "seek") {
+          spotify.seek(data.newTime);
+        }
+      } else {
+        console.log("Authorization failed");
+        // force a token get req?
+      }
+    });
+
+    socket.on("changeSong", (data) => {
+        console.log(data.token);
+        console.log(data.newSong);
+        spotify.play(data.newSong.uri);
+    })
+
+    socket.on("volume:change", (data) => {
+      spotify.setVolume(data.volume);
+    });
+
+    socket.on("pause", () => {
+      spotify.pause();
+    });
+
+    socket.on("unpause", () => {
+      spotify.play();
+    });
+
+    socket.on("exit", () => document.location.reload());
+
+    socket.on("token", (data) => {
+      const token = data.token;
+      console.log(token);
+      spotify.connect(token).then(() => {
+        console.log("Now authorized!")
+        authorized = true;
+      });
+    });
+  </script>
+</html>
+

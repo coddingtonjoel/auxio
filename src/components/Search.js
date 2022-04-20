@@ -24,7 +24,8 @@ const Search = () => {
   }
 
   const handlePlay = (song) => {
-    ipcRenderer.send("currentSong:change", ({song}));
+    ipcRenderer.send("currentSong:change", ({song: song, newTime: 0, pause: false}));
+    ipcRenderer.send("search:start");
   }
 
   // init ipc listener
@@ -54,9 +55,9 @@ const Search = () => {
         {/* If songs were found by the search */}
         {res.length !== 0 ? res.map((song) => {
           return (
-            <div className="song" key={song.id} onClick={() => handlePlay(song)}>
+            <div className="song" key={song.id}>
               {/* use 64x64 album art */}
-              <div className="album-art-container">
+              <div className="album-art-container" onClick={() => handlePlay(song)}>
                 <img className="album-art-play" src={play} alt="Play"/>
                 <img draggable={false} className="album-art" src={song.albumArt[1]} alt={song.album}/>
               </div>
@@ -93,15 +94,6 @@ const Wrapper = styled.div`
 
     &:hover {
       background-color: ${props => props.theme.searchQueueItemBkg};
-      cursor: pointer;
-    }
-
-    &:hover > .album-art-container::after {
-      opacity: 0.3;
-    }
-
-    &:hover > .album-art-container > .album-art-play {
-      opacity: 1;
     }
 
     .song-info {
@@ -130,6 +122,15 @@ const Wrapper = styled.div`
       width: 48px;
     }
 
+    .album-art-container:hover::after {
+      opacity: 0.55;
+      cursor: pointer;
+    }
+
+    .album-art-container:hover > .album-art-play {
+        opacity: 1;
+    }
+
     .album-art-container {
       height: 48px;
       width: 48px;
@@ -146,6 +147,7 @@ const Wrapper = styled.div`
       height: 28px;
       transition: 0.15s;
       z-index: 5;
+      cursor: pointer;
     }
 
     .album-art-container::after {
@@ -159,6 +161,7 @@ const Wrapper = styled.div`
       background-color: #000;
       opacity: 0;
       transition: 0.15s;
+      cursor: pointer;
     }
 
     /* plus button */

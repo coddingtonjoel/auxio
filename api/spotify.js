@@ -53,7 +53,7 @@ class SpotifyCred{
  
               curr.albumArt = [item.album.images[0].url,item.album.images[2].url];
               curr.uri = item.uri;
-              curr.length = Math.floor(item.duration_ms / 1000);
+              curr.length = Math.floor(item.duration_ms);
               returnSongs.push(curr);
           }); 
           res(returnSongs);
@@ -86,7 +86,7 @@ class SpotifyCred{
 
           curr.albumArt = [item.track.album.images[0].url,item.track.album.images[2].url]; 
           curr.uri = item.track.uri;
-          curr.length = Math.floor(item.track.duration_ms / 1000);
+          curr.length = Math.floor(item.track.duration_ms);
           returnSongs.push(curr);
         });
         res(returnSongs);
@@ -117,7 +117,7 @@ class SpotifyCred{
 
 
   static refresh(){ //Called periodically to refresh the token
-     
+    setTimeout(function(){
       SpotifyCred.spotifyApi.refreshAccessToken().then(
           function(data) {
               console.log('The access token has been refreshed!');
@@ -130,6 +130,8 @@ class SpotifyCred{
               console.log('Could not refresh access token', err);
           }
       );
+      SpotifyCred.refresh();
+    },1740000);
   }
 
   
@@ -137,7 +139,7 @@ class SpotifyCred{
 
       const successfulLogin = Database.getDataOnce("SpotifySecret/").then((snapshot) => 
       {
-
+        
         if (!snapshot.exists()) {
           console.log("Spotify Login Failed: Spotify Secret Not Found!"); //secret not on database, this should never occur 
         } else {
@@ -161,12 +163,15 @@ class SpotifyCred{
                 // Set the access token on the API object to use it in later calls
                 SpotifyCred.spotifyApi.setAccessToken(data.body['access_token']);
                 SpotifyCred.spotifyApi.setRefreshToken(data.body['refresh_token']);
+                SpotifyCred.refresh();
               },
               function(err) { console.log('Spotify Login: Something went wrong!', err); }
           );
+          
         }
       }).catch((error) => {
-        console.log("Spotify Login Failed: Database Not Reached!"); //read from database failed
+        //console.log("error was found")
+        SpotifyCred.login(code); //read from database failed
       });
       return successfulLogin;
   }
